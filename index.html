@@ -296,7 +296,64 @@
 @keyframes legR { from { transform: rotate(-28deg); } to { transform: rotate(20deg); } }
 @keyframes completeBounce { from { transform: translateY(2px); } to { transform: translateY(-8px); } }
 
+
+/* All Break activities use the same full-screen stage */
+.sheet {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  z-index: 10000 !important;
+  overflow: auto !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.sheet.open {
+  display: flex !important;
+}
+.sheet::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: -1;
+}
+.sheet-card {
+  width: min(760px, 100vw) !important;
+  min-height: 100dvh;
+  max-height: 100dvh !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(22px, 5vw, 56px) !important;
+  box-sizing: border-box;
+}
+.sheet-head {
+  flex: 0 0 auto;
+}
+
 </style>
+
+<style>
+#walkSheet .walk-card { min-height: 100dvh; }
+#walkSheet .walk-visual { flex: 0 0 auto; }
+#walkSheet .walk-controls { flex: 0 0 auto; }
+@media (max-height: 650px) {
+  #walkSheet .walk-visual { height: 120px; margin: 8px 0 0; }
+  #walkSheet .walk-time { font-size: 52px; margin: 4px 0 6px; }
+  #walkSheet .walk-note { display: none; }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1664,5 +1721,20 @@ function saveTasks(){
 })();
 
 </script>
+
+<script>
+/* Break activity routing fallback */
+document.addEventListener('click', function(e) {
+  const card = e.target.closest('.break-card, [data-break], .break-item, .activity-card');
+  if (!card) return;
+  const text = (card.dataset.label || card.dataset.activity || card.textContent || '').trim().toLowerCase();
+  if (text.includes('walk') && typeof window.openWalkingReset === 'function') {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.openWalkingReset();
+  }
+}, true);
+</script>
+
 </body>
 </html>
