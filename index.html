@@ -555,6 +555,177 @@ html body .sheet.open .sheet-card {
 }
 </style>
 
+
+<style id="activity-shell-v10">
+/*
+  ACTIVITY FULLSCREEN FIX v10
+  The original app has two different modal systems:
+  - Wordle/Doodle/Breathing use .sheet.show + .panel
+  - Walking uses #walkSheet.open + .sheet-card
+  The previous overrides only handled the second system.
+*/
+
+/* Doodle + Breathing activity sheet */
+html body .sheet.break-activity-sheet.show {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  inset: 0 !important;
+
+  display: block !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background: var(--bg, #f7f7f5) !important;
+  z-index: 10000 !important;
+
+  align-items: initial !important;
+  justify-content: initial !important;
+  overflow: hidden auto !important;
+
+  transform: none !important;
+}
+
+/* This was the actual bottom-sheet element causing the giant top gap. */
+html body .sheet.break-activity-sheet.show > .panel {
+  position: relative !important;
+
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+
+  width: 100vw !important;
+  max-width: none !important;
+  min-width: 0 !important;
+
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding-top: max(18px, env(safe-area-inset-top)) !important;
+  padding-right: max(20px, env(safe-area-inset-right)) !important;
+  padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  padding-left: max(20px, env(safe-area-inset-left)) !important;
+
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+
+  background: var(--card, #fff) !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+
+  overflow: hidden auto !important;
+  box-sizing: border-box !important;
+
+  transform: none !important;
+}
+
+/* Keep activity content from being pushed downward by old panel rules. */
+html body .sheet.break-activity-sheet.show .sheet-head {
+  flex: 0 0 auto !important;
+  margin-top: 0 !important;
+}
+
+html body .sheet.break-activity-sheet.show #breakActivityContent {
+  width: 100% !important;
+  flex: 0 0 auto !important;
+  margin-top: 0 !important;
+}
+
+/* Wordle uses .show too. Give it the same shell, while retaining its
+   carefully tuned internal board/keyboard sizing. */
+html body .sheet.wordle-sheet.show {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  inset: 0 !important;
+
+  display: block !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background: var(--bg, #f7f7f5) !important;
+  z-index: 10000 !important;
+  overflow: hidden auto !important;
+  transform: none !important;
+}
+
+html body .sheet.wordle-sheet.show > .panel {
+  position: relative !important;
+  width: 100vw !important;
+  max-width: none !important;
+
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding-top: max(18px, env(safe-area-inset-top)) !important;
+  padding-right: max(20px, env(safe-area-inset-right)) !important;
+  padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  padding-left: max(20px, env(safe-area-inset-left)) !important;
+
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+
+  background: var(--card, #fff) !important;
+  overflow: hidden auto !important;
+  box-sizing: border-box !important;
+  transform: none !important;
+}
+
+/* Walking is the other implementation and already uses .open + .sheet-card. */
+html body #walkSheet.open {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: var(--bg, #f7f7f5) !important;
+  z-index: 10000 !important;
+  overflow: hidden auto !important;
+}
+
+html body #walkSheet.open > .sheet-card {
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  justify-content: flex-start !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
