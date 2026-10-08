@@ -1713,6 +1713,7 @@ function saveTasks(){
     if(recognition){
       try{ recognition.abort(); }catch(e){ try{ recognition.stop(); }catch(e2){} }
     }
+    recognition=null;
     listening=false;
     activeVoiceTarget=null;
     activeVoiceMode="task";
@@ -1829,14 +1830,64 @@ function saveTasks(){
   }
 
 
+  function splitVoiceTasks(text){
+    // Split only on clear spoken task boundaries. Commas/periods are useful,
+    // but words like "and" are deliberately not treated as separators because
+    // humans enjoy putting "and" inside perfectly normal task names.
+    return text
+      .replace(/\\b(?:next\\s+task|next)\\b/gi, "\\n")
+      .replace(/\\b(?:then|and\\s+then)\\b/gi, "\\n")
+      .replace(/[.!?]+/g, "\\n")
+      .split(/\\n|[,;]+/)
+      .map(x=>x.trim())
+      .filter(Boolean);
+  }
+
+  function createTasksFromVoice(text){
+    const parts = splitVoiceTasks(text);
+    const allowed = [5,10,15,20,30,45,60,90];
+    const created = [];
+
+    parts.forEach((part, index)=>{
+      const parsed = parseVoiceTask(part);
+      const name = parsed.name.trim();
+      if(!name) return;
+      created.push({
+        id: Date.now() + index,
+        name,
+        when: parsed.when && /^\\d{2}:\\d{2}$/.test(parsed.when) ? parsed.when : "",
+        duration: allowed.includes(parsed.duration) ? parsed.duration : 15,
+        done:false,
+        repeat:$("taskRepeat")?.value || "None",
+        taskDate:parsed.taskDate || todayISO()
+      });
+    });
+
+    if(!created.length) return 0;
+    tasks.push(...created);
+    saveTasks();
+    renderTasks();
+    updateBreakGameAvailability();
+    return created.length;
+  }
+
+  function finishVoiceTaskInput(text){
+    const clean = String(text || "").trim();
+    if(!clean) return;
+    const count = createTasksFromVoice(clean);
+    if(count === 1) showToast("Task added.");
+    else if(count > 1) showToast(`${count} tasks added.`);
+  }
+
   function fillTaskFormFromText(text){
+    // Keep typed/Enter behavior unchanged: voice is the only path that
+    // auto-creates tasks. This function still opens the normal task sheet.
     const parsed = parseVoiceTask(text);
     $("taskName").value = parsed.name;
     const allowed = [5,10,15,20,30,45,60,90];
     $("taskDuration").value = String(allowed.includes(parsed.duration) ? parsed.duration : 15);
 
-    // iOS Safari requires a strict HH:mm value for <input type="time">.
-    if (parsed.when && /^\d{2}:\d{2}$/.test(parsed.when)) {
+    if (parsed.when && /^\\d{2}:\\d{2}$/.test(parsed.when)) {
       $("taskWhen").value = parsed.when;
     } else {
       $("taskWhen").value = "";
@@ -1872,13 +1923,18 @@ function saveTasks(){
       showToast("Listening… Tap ■ when you're finished.");
     };
 
+    r._voiceTranscript = "";
     r.onresult = (event)=>{
       let transcript = "";
       for(let i=event.resultIndex;i<event.results.length;i++){
-        transcript += event.results[i][0].transcript;
+        transcript += event.results[i][0].transcript + " ";
       }
+      transcript = transcript.trim();
       const target=$(activeVoiceTarget);
-      if(target) target.value = transcript;
+      if(target && transcript){
+        r._voiceTranscript = transcript;
+        target.value = r._voiceTranscript;
+      }
     };
 
     r.onerror = (event)=>{
@@ -1900,14 +1956,14 @@ function saveTasks(){
       listening = false;
       const finishedMode = activeVoiceMode;
       const finishedTarget = activeVoiceTarget;
+      const capturedText = String(r._voiceTranscript || $(finishedTarget || "quickInput")?.value || "").trim();
       const btnId = finishedMode==="routine" ? "routineVoiceBtn" : finishedMode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
       resetVoiceButton(btnId);
       if(wasIgnored) return;
 
       activeVoiceTarget=null;
       if(finishedMode==="task"){
-        const text=$(finishedTarget || "quickInput")?.value.trim();
-        if(text) fillTaskFormFromText(text);
+        if(capturedText) finishVoiceTaskInput(capturedText);
       }else if(finishedMode==="routine"){
         const text=$(finishedTarget)?.value.trim();
         if(text){
@@ -1932,9 +1988,34 @@ function saveTasks(){
     return r;
   }
 
+  function stopVoiceAndFinalize(){
+    if(!recognition){
+      listening=false;
+      return;
+    }
+    // Do not use abort() here. abort() intentionally suppresses the end event,
+    // which is exactly where captured speech is committed to tasks.
+    ignoreRecognitionEnd = false;
+    try { recognition.stop(); }
+    catch(e){
+      const mode = activeVoiceMode;
+      const target = activeVoiceTarget;
+      const text = String(recognition._voiceTranscript || $(target)?.value || "").trim();
+      listening=false;
+      recognition=null;
+      activeVoiceTarget=null;
+      activeVoiceMode="task";
+      if(mode==="task" && text) finishVoiceTaskInput(text);
+      resetVoiceButton("voiceBtn");
+      resetVoiceButton("routineVoiceBtn");
+      resetVoiceButton("calendarVoiceBtn");
+    }
+  }
+
   function startVoice(targetId, mode){
     if(listening && recognition){
-      stopVoiceInput();
+      if(mode==="task") stopVoiceAndFinalize();
+      else stopVoiceInput();
       return;
     }
     recognition = setupRecognition(targetId, mode);
