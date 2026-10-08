@@ -448,6 +448,9 @@
   margin-top: 10px;
 }
 
+
+.stretch-sheet{text-align:center;padding:24px 20px}.stretch-kicker{font-size:13px;letter-spacing:.08em;color:#888;text-transform:uppercase}.stretch-title{font-size:38px;font-weight:800;margin:4px 0}.stretch-subtitle{font-size:18px;color:#777;margin:0 0 10px}.stretch-figure-wrap{height:220px;display:flex;align-items:center;justify-content:center}.stretch-figure{width:205px;height:215px}.stretch-figure svg{width:100%;height:100%}.stretch-figure .body{fill:none;stroke:#111;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}.stretch-figure .head{fill:#111}.stretch-figure .move{transform-box:fill-box;transform-origin:center;animation:stretchMove 3.5s ease-in-out infinite}@keyframes stretchMove{0%,100%{transform:translateY(3px) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}.stretch-name{font-size:27px;font-weight:800;margin:2px 0 6px}.stretch-instruction{font-size:17px;line-height:1.4;color:#666;max-width:520px;margin:0 auto;min-height:48px}.stretch-time{font-size:52px;font-variant-numeric:tabular-nums;margin:10px 0}.stretch-progress{height:5px;background:#e8e8e8;border-radius:9px;overflow:hidden;margin:0 8px 14px}.stretch-progress>div{height:100%;background:#111}.stretch-next{font-size:14px;color:#888;margin-bottom:16px}.stretch-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stretch-controls button{min-height:52px;border:1px solid #ddd;border-radius:18px;background:#f2f2f2;font-size:17px}.stretch-controls .end{background:#111;color:#fff;border-color:#111}.stretch-complete{text-align:center;padding:70px 20px}.stretch-complete h2{font-size:34px;margin:0 0 10px}.stretch-complete p{font-size:18px;color:#777}.stretch-complete button{padding:14px 28px;border:0;border-radius:18px;background:#111;color:#fff;font-size:17px}
+
 </style>
 
 <style>
@@ -2392,6 +2395,40 @@ document.addEventListener('click', function(e) {
     window.openWalkingReset();
   }
 }, true);
+
+/* stretchActivityV1 */
+(function(){
+const seq=[
+["Neck + shoulders",45,"Slowly tilt your head side to side. Then roll your shoulders gently.","Upper back"],
+["Upper back",45,"Reach your hands forward and gently round your upper back.","Chest opener"],
+["Chest opener",45,"Let your shoulders move back and open your chest. Keep it easy.","Side stretch"],
+["Side stretch",60,"Reach one arm overhead and lean gently. Switch sides halfway.","Forward fold"],
+["Forward fold",60,"Soften your knees and let your upper body relax forward.","Full-body reach"],
+["Full-body reach",45,"Reach up, stretch tall, then slowly release.","Done"]
+];
+let elapsed=0,paused=false,timer=null;
+function sheet(){return document.querySelector("[data-activity-sheet],.activity-sheet,.sheet")}
+function close(){if(timer){clearInterval(timer);timer=null}const s=sheet();if(s)s.classList.remove("open")}
+function fig(){return '<div class="stretch-figure"><svg viewBox="0 0 205 215" aria-hidden="true"><g class="move"><circle class="head" cx="103" cy="38" r="17"/><path class="body" d="M103 58V126M103 76L62 103M103 76L144 103M103 126L75 184M103 126L132 184"/></g></svg></div>'}
+function render(){
+ const root=document.getElementById("stretchActivityV1");if(!root)return;
+ if(elapsed>=300){if(timer){clearInterval(timer);timer=null}root.innerHTML='<div class="stretch-complete"><div class="stretch-kicker">RESET</div><h2>Stretch complete.</h2><p>Nice reset. Five minutes of gentle movement done.</p><button id="stretchDone">Done</button></div>';document.getElementById("stretchDone").onclick=close;return}
+ let a=0,i=0;for(i=0;i<seq.length;i++){if(elapsed<a+seq[i][1])break;a+=seq[i][1]}
+ const x=seq[i],left=x[1]-(elapsed-a),pct=Math.min(100,elapsed/300*100);
+ root.innerHTML='<div class="stretch-sheet"><div class="stretch-kicker">RESET</div><h1 class="stretch-title">Stretch</h1><p class="stretch-subtitle">5 minutes to loosen up.</p><div class="stretch-figure-wrap">'+fig()+'</div><div class="stretch-name">'+x[0]+'</div><p class="stretch-instruction">'+x[2]+'</p><div class="stretch-time">'+String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0")+'</div><div class="stretch-progress"><div style="width:'+pct+'%"></div></div><div class="stretch-next">Next: '+x[3]+'</div><div class="stretch-controls"><button id="stretchPause">'+(paused?"Resume":"Pause")+'</button><button id="stretchSkip">Skip</button><button class="end" id="stretchEnd">End stretch</button><button id="stretchClose">Close</button></div></div>';
+ document.getElementById("stretchPause").onclick=function(){paused=!paused;if(paused){clearInterval(timer);timer=null}else tick();render()};
+ document.getElementById("stretchSkip").onclick=function(){elapsed=a+x[1];render()};
+ document.getElementById("stretchEnd").onclick=function(){elapsed=300;render()};
+ document.getElementById("stretchClose").onclick=close;
+}
+function tick(){if(timer||paused)return;timer=setInterval(function(){elapsed++;render()},1000)}
+window.startStretchActivity=function(){const s=sheet();if(!s)return;s.innerHTML='<div id="stretchActivityV1"></div>';s.classList.add("open");elapsed=0;paused=false;render();tick()}
+document.addEventListener("click",function(e){
+ const el=e.target.closest('[data-activity="stretch"],[data-break="stretch"]');
+ if(!el)return;e.preventDefault();e.stopPropagation();startStretchActivity();
+},true);
+})();
+
 </script>
 
 </body>
