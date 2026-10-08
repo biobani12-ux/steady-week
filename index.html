@@ -1831,14 +1831,13 @@ function saveTasks(){
 
 
   function splitVoiceTasks(text){
-    // Split only on clear spoken task boundaries. Commas/periods are useful,
-    // but words like "and" are deliberately not treated as separators because
-    // humans enjoy putting "and" inside perfectly normal task names.
+    // Support natural spoken boundaries. The previous version accidentally
+    // escaped the regex boundaries, so the separators were treated literally.
     return text
-      .replace(/\\b(?:next\\s+task|next)\\b/gi, "\\n")
-      .replace(/\\b(?:then|and\\s+then)\\b/gi, "\\n")
-      .replace(/[.!?]+/g, "\\n")
-      .split(/\\n|[,;]+/)
+      .replace(/\b(?:next\s+task|next)\b/gi, "\n")
+      .replace(/\b(?:and\s+then|then)\b/gi, "\n")
+      .replace(/[.!?]+/g, "\n")
+      .split(/\n|[,;]+/)
       .map(x=>x.trim())
       .filter(Boolean);
   }
@@ -1923,18 +1922,27 @@ function saveTasks(){
       showToast("Listening… Tap ■ when you're finished.");
     };
 
+    // Keep final speech permanently and replace only the current interim speech.
+    // Web Speech emits new interim results repeatedly, so overwriting the whole
+    // transcript on every event loses everything the user said before the latest phrase.
+    r._voiceFinalTranscript = "";
+    r._voiceInterimTranscript = "";
     r._voiceTranscript = "";
     r.onresult = (event)=>{
-      let transcript = "";
+      let interim = "";
       for(let i=event.resultIndex;i<event.results.length;i++){
-        transcript += event.results[i][0].transcript + " ";
+        const piece = event.results[i][0].transcript.trim();
+        if(!piece) continue;
+        if(event.results[i].isFinal){
+          r._voiceFinalTranscript += (r._voiceFinalTranscript ? " " : "") + piece;
+        }else{
+          interim += (interim ? " " : "") + piece;
+        }
       }
-      transcript = transcript.trim();
+      r._voiceInterimTranscript = interim;
+      r._voiceTranscript = `${r._voiceFinalTranscript} ${r._voiceInterimTranscript}`.trim();
       const target=$(activeVoiceTarget);
-      if(target && transcript){
-        r._voiceTranscript = transcript;
-        target.value = r._voiceTranscript;
-      }
+      if(target) target.value = r._voiceTranscript;
     };
 
     r.onerror = (event)=>{
@@ -1956,7 +1964,12 @@ function saveTasks(){
       listening = false;
       const finishedMode = activeVoiceMode;
       const finishedTarget = activeVoiceTarget;
-      const capturedText = String(r._voiceTranscript || $(finishedTarget || "quickInput")?.value || "").trim();
+      const capturedText = String(
+        r._voiceTranscript ||
+        `${r._voiceFinalTranscript || ""} ${r._voiceInterimTranscript || ""}` ||
+        $(finishedTarget || "quickInput")?.value ||
+        ""
+      ).trim();
       const btnId = finishedMode==="routine" ? "routineVoiceBtn" : finishedMode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
       resetVoiceButton(btnId);
       if(wasIgnored) return;
@@ -2000,7 +2013,12 @@ function saveTasks(){
     catch(e){
       const mode = activeVoiceMode;
       const target = activeVoiceTarget;
-      const text = String(recognition._voiceTranscript || $(target)?.value || "").trim();
+      const text = String(
+        recognition._voiceTranscript ||
+        `${recognition._voiceFinalTranscript || ""} ${recognition._voiceInterimTranscript || ""}` ||
+        $(target)?.value ||
+        ""
+      ).trim();
       listening=false;
       recognition=null;
       activeVoiceTarget=null;
