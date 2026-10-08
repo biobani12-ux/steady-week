@@ -35,8 +35,13 @@
   .task-main{min-width:0;flex:1}.name{font-weight:600}.meta{font-size:12px;color:var(--muted);margin-top:4px}
   .modify-btn{border:1px solid #ddd;background:#fff;border-radius:10px;padding:8px 9px;font-size:12px;white-space:nowrap}.timer-btn{border:0;background:#111;color:#fff;border-radius:11px;padding:9px 10px;font-size:12px}
   .empty{padding:30px;text-align:center;color:var(--muted);background:white;border:1px dashed #ddd;border-radius:17px}
+  .progress-card{background:white;border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:8px}
+  .progress-date{font-size:13px;color:var(--muted);margin-bottom:8px}.progress-count{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:18px}.progress-count.green{color:#2f9e44}
+  .progress-chart{display:flex;flex-direction:column;gap:14px}.progress-row{display:grid;grid-template-columns:78px 1fr 34px;align-items:center;gap:10px;font-size:12px}.progress-row-label{font-weight:700}.progress-bar{height:12px;background:#eee;border-radius:10px;overflow:hidden}.progress-bar i{display:block;height:100%;border-radius:10px}.progress-bar i.complete{background:#2f9e44}.progress-bar i.pending{background:#e0ad00}.progress-note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:18px}
+  .break-icon{width:28px;height:28px;margin:0 auto;color:#0784ff;display:flex;align-items:center;justify-content:center}.break-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .break-card b{margin-top:9px}
   nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);height:70px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:10}
-  nav button{background:none;border:0;color:#888;font-size:11px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center}
+  nav button{background:none;border:0;color:#888;font-size:10px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center}
   nav button.active{color:#111;font-weight:700}.nav-icon{font-size:19px}
   .screen{display:none}.screen.active{display:block}
   .sheet{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;z-index:20}
@@ -765,14 +770,6 @@ html body #walkSheet .walk-visual {
   justify-content: center !important;
   overflow: hidden !important;
 }
-html body #walkSheet .walk-gif {
-  display: block !important;
-  width: min(78vw, 390px) !important;
-  height: 190px !important;
-  max-width: 100% !important;
-  object-fit: contain !important;
-  margin: 0 auto !important;
-}
 </style>
 
 
@@ -904,6 +901,21 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
     </div>
   </section>
 
+  <section id="progress" class="screen">
+    <header><div><h1>Progress</h1><div class="date">A simple count of what got done.</div></div></header>
+    <div class="content">
+      <div class="progress-card">
+        <div class="progress-date" id="progressDate"></div>
+        <div class="progress-count green" id="progressCount">0 tasks completed today</div>
+        <div class="progress-chart">
+          <div class="progress-row"><span class="progress-row-label">Completed</span><div class="progress-bar"><i class="complete" id="completedBar"></i></div><b id="completedValue">0</b></div>
+          <div class="progress-row"><span class="progress-row-label">Pending</span><div class="progress-bar"><i class="pending" id="pendingBar"></i></div><b id="pendingValue">0</b></div>
+        </div>
+        <div class="progress-note" id="progressNote"></div>
+      </div>
+    </div>
+  </section>
+
   <section id="routines" class="screen">
     <header><div><h1>Routines</h1><div class="date">Things you do again and again</div></div><button class="icon-btn" id="routineAdd">+</button></header>
     <div class="content">
@@ -932,16 +944,16 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   </section>
 
   <section id="break" class="screen">
-    <header><div><h1>Take a break</h1><div class="date">Rest is part of the plan.</div></div></header>
+    <header><div><h1>Take a break</h1><div class="date" id="breakSubtitle">Rest is part of the plan.</div></div></header>
     <div class="content">
       <div class="break-return waiting" id="breakReturn"><b id="breakReturnTitle">No paused timer</b><span id="breakReturnText">Start a task timer, then use “Take a break” to pause it here.</span><button class="primary" id="returnToFocus" style="margin-top:12px">Return to timer</button></div>
       <div class="break-grid">
-        <button class="break-card" data-kind="wordle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon">▦</div><b>Wordle</b><span>5 min</span></button>
-        <button class="break-card" data-kind="walk" data-min="10"><div class="break-icon">♧</div><b>Walk</b><span>10 min</span></button>
-        <button class="break-card" data-kind="doodle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon">✎</div><b>Doodle</b><span>5 min</span></button>
-        <button class="break-card" data-kind="lofi" data-min="15"><div class="break-icon">♫</div><b>Lo-fi music</b><span>15 min</span></button>
-        <button class="break-card" data-kind="breathing" data-min="3"><div class="break-icon">○</div><b>Breathing</b><span>3 min</span></button>
-        <button class="break-card" data-kind="stretch" data-min="5"><div class="break-icon">⌁</div><b>Stretch</b><span>5 min</span></button>
+        <button class="break-card" data-kind="wordle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="4"/><rect x="10" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="17" y="10" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><rect x="10" y="17" width="4" height="4"/><rect x="17" y="17" width="4" height="4"/></svg></div><b>Wordle</b><span>5 min</span></button>
+        <button class="break-card" data-kind="walk" data-min="10"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M13 4.5a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z"/><path d="m10 7 2 4 3 2"/><path d="m10 9-3 4-2 4"/><path d="m12 11-1 5 3 4"/><path d="m8 13 4 1"/></svg></div><b>Walk</b><span>10 min</span></button>
+        <button class="break-card" data-kind="doodle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M4 17.5 15.5 6l2.5 2.5L6.5 20H4v-2.5Z"/><path d="m14 7.5 2.5 2.5"/><path d="M18 4.5h.01M20 7h.01"/></svg></div><b>Doodle</b><span>5 min</span></button>
+        <button class="break-card" data-kind="lofi" data-min="15"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M8 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div><b>Lo-fi music</b><span>15 min</span></button>
+        <button class="break-card" data-kind="breathing" data-min="3"><div class="break-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M20 12h-4M12 20v-4M4 12h4"/></svg></div><b>Breathing</b><span>3 min</span></button>
+        <button class="break-card" data-kind="stretch" data-min="5"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg></div><b>Stretch</b><span>5 min</span></button>
       </div>
     </div>
   </section>
@@ -975,6 +987,7 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 
 <nav>
     <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Today</button>
+    <button data-screen="progress"><span class="nav-icon">▥</span>Progress</button>
     <button data-screen="routines"><span class="nav-icon">↻</span>Routines</button>
     <button data-screen="calendar"><span class="nav-icon">□</span>Calendar</button>
     <button data-screen="break"><span class="nav-icon">☕</span>Break</button>
@@ -994,8 +1007,6 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
     <div class="walk-subtitle" id="walkSubtitle">10 minutes. No destination required.</div>
 
     <div class="walk-visual" aria-hidden="true">
-      <img class="walk-gif" src="walking.gif" alt=""
-         onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='dezyne_3d-walk-21929.gif';}">
     </div>
 
     <div class="walk-time" id="walkTime">10:00</div>
@@ -1162,6 +1173,27 @@ function saveTasks(){
   function saveRoutines(){try{localStorage.setItem(ROUTINES_KEY,JSON.stringify(routines));}catch(e){console.warn("Could not save routines",e);}}
   saveRoutines();
   let events = [];
+  const PROGRESS_KEY = "steadyWeekProgress_v1";
+  let progressHistory = {};
+  try { progressHistory = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}"); } catch(e) { progressHistory = {}; }
+  function saveProgress(){ try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressHistory)); } catch(e) {} }
+  function recordProgressForDate(date){
+    const dayTasks = tasks.filter(t => (t.taskDate || todayISO()) === date);
+    if(!dayTasks.length) return;
+    progressHistory[date] = { total:dayTasks.length, completed:dayTasks.filter(t=>t.done).length, pending:dayTasks.filter(t=>!t.done).length };
+    saveProgress();
+  }
+  function rollPendingTasksForward(){
+    const today = todayISO();
+    const dates = [...new Set(tasks.map(t => t.taskDate).filter(d => d && d < today))];
+    dates.forEach(date => {
+      const old = tasks.filter(t => (t.taskDate || "") === date);
+      if(!old.length) return;
+      progressHistory[date] = { total:old.length, completed:old.filter(t=>t.done).length, pending:old.filter(t=>!t.done).length };
+      old.filter(t=>!t.done).forEach(t=>{ t.taskDate = today; });
+    });
+    saveProgress(); saveTasks();
+  }
   let breakdownTarget = null;
   let focusTask = null;
   let focusStepIndex = 0;
@@ -1195,6 +1227,7 @@ function saveTasks(){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
     $(id).classList.add("active");
     document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.screen===id));
+    if(id==="progress") renderProgress();
     if(id==="routines") renderRoutines("Daily");
     if(id==="calendar") renderCalendar();
     if(id==="break"){
@@ -1211,6 +1244,8 @@ function saveTasks(){
         }
       }
       const card=$("breakReturn");
+      const completedToday=todayTasksAreComplete();
+      card.style.display=(!hasPausedTimer && completedToday)?"none":"block";
       card.classList.toggle("waiting",!hasPausedTimer);
       $("returnToFocus").style.display=hasPausedTimer?"inline-flex":"none";
       $("breakReturnTitle").textContent=hasPausedTimer?"Timer paused":"No paused timer";
@@ -1220,6 +1255,7 @@ function saveTasks(){
       }else{
         $("breakReturnText").textContent="Start a task timer, then use “Take a break” to pause it here.";
       }
+      $("breakSubtitle").textContent=completedToday?"You finished today’s tasks. Choose your reset.":"Rest is part of the plan.";
     }
   }
   document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
@@ -1300,13 +1336,31 @@ function saveTasks(){
   $("cancelModify").onclick=closeModify;
 
 
-  function renderTasks(){ const box=$("taskList");box.innerHTML="";const sorted=[...tasks].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));renderDayTimeline(sorted);if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>';return;}sorted.forEach(t=>{const el=document.createElement("div");el.className="task"+(t.done?" done":"");el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min${t.steps?` · ${t.steps.length} steps`:""}</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;el.querySelector(".check").addEventListener("click",()=>{
-        t.done=!t.done;
-        saveTasks();
-        renderTasks();
-        updateBreakGameAvailability();
-      });el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
-      el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));box.appendChild(el)}) }
+  function renderTasks(){
+    rollPendingTasksForward();
+    const box=$("taskList"); box.innerHTML="";
+    const today=todayISO();
+    const todayList=tasks.filter(t => (t.taskDate || today) === today);
+    const sorted=[...todayList].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));
+    renderDayTimeline(sorted);
+    if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>'; return;}
+    sorted.forEach(t=>{
+      const el=document.createElement("div");
+      el.className="task"+(t.done?" done":"");
+      el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;
+      el.querySelector(".check").addEventListener("click",()=>{
+        t.done=!t.done; saveTasks(); recordProgressForDate(today); renderTasks(); updateBreakGameAvailability();
+        if(todayTasksAreComplete()){
+          recordProgressForDate(today);
+          setTimeout(()=>showScreen("progress"),180);
+        }
+      });
+      el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
+      el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));
+      box.appendChild(el);
+    });
+    recordProgressForDate(today);
+  }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
   function getGreeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Hi there":"Good evening";}
   function setupIdentity(){let saved=localStorage.getItem(NAME_KEY);
@@ -1669,14 +1723,45 @@ function saveTasks(){
     saveRoutines(); closeRoutine(); renderRoutines($("routineFreq").value); showToast("Routine added.");
   };
 
+  function renderProgress(){
+    const today=todayISO();
+    const list=tasks.filter(t => (t.taskDate || today) === today);
+    const completed=list.filter(t=>t.done).length;
+    const pending=list.filter(t=>!t.done).length;
+    const total=Math.max(1,list.length);
+    recordProgressForDate(today);
+    $("progressDate").textContent=new Date(today+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
+    $("progressCount").textContent=`${completed} task${completed===1?"":"s"} completed today`;
+    $("completedValue").textContent=completed; $("pendingValue").textContent=pending;
+    $("completedBar").style.width=(completed/total*100)+"%"; $("pendingBar").style.width=(pending/total*100)+"%";
+    $("progressNote").textContent=pending ? `${pending} pending task${pending===1?"":"s"} will carry forward to the next day.` : "Everything scheduled for today is complete.";
+  }
+
+  let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let calendarSelected = todayISO();
   function renderCalendar(){
-    const d=new Date(2026,9,6); $("monthTitle").textContent=d.toLocaleDateString(undefined,{month:"long"});
-    const first=new Date(2026,9,1).getDay(), days=new Date(2026,10,0).getDate();
+    const d=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
+    $("monthTitle").textContent=d.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+    const first=d.getDay(), days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
     $("dates").innerHTML="";
     for(let i=0;i<first;i++)$("dates").appendChild(document.createElement("div"));
-    for(let n=1;n<=days;n++){const c=document.createElement("div");c.className="date-cell"+(n===6?" today":"");c.textContent=n;$("dates").appendChild(c)}
-    $("events").innerHTML=events.length?events.map(e=>`<div class="event"><b>${escapeHtml(e.name)}</b><br><span class="meta">${e.date} · ${e.time||"Any time"} · ${e.repeat}</span></div>`).join(""):'<div class="event" style="color:#777">No future tasks scheduled yet.</div>';
+    for(let n=1;n<=days;n++){
+      const date=isoDate(new Date(d.getFullYear(),d.getMonth(),n));
+      const c=document.createElement("div");
+      const hasTask=tasks.some(t=>(t.taskDate||"")===date) || events.some(e=>e.date===date);
+      c.className="date-cell"+(date===todayISO()?" today":"")+(date===calendarSelected?" selected":"")+(hasTask?" has-events":"");
+      c.textContent=n;
+      c.onclick=()=>{calendarSelected=date;renderCalendar();};
+      $("dates").appendChild(c);
+    }
+    const selectedTasks=tasks.filter(t=>(t.taskDate||"")===calendarSelected);
+    const selectedEvents=events.filter(e=>e.date===calendarSelected);
+    const items=[...selectedTasks.map(t=>({name:t.name,date:t.taskDate,time:t.when?formatTime(t.when):"Any time",repeat:t.repeat||"Does not repeat",done:t.done})),...selectedEvents.map(e=>({name:e.name,date:e.date,time:e.time||"Any time",repeat:e.repeat||"Does not repeat",done:false}))];
+    $("selectedDateLabel").textContent=new Date(calendarSelected+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
+    $("events").innerHTML=items.length?items.map(e=>`<div class="event"><b>${escapeHtml(e.name)}</b><br><span class="meta">${e.time} · ${e.repeat}${e.done?" · Completed":""}</span></div>`).join(""):'<div class="event" style="color:#777">Nothing scheduled for this day.</div>';
   }
+  $("prevMonth").onclick=()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);calendarSelected=isoDate(calendarCursor);renderCalendar();};
+  $("nextMonth").onclick=()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);calendarSelected=isoDate(calendarCursor);renderCalendar();};
   $("calendarAdd").onclick=()=>$("calendarSheet").classList.add("show");
   $("cancelCalendar").onclick=()=>$("calendarSheet").classList.remove("show");
   $("saveCalendar").onclick=()=>{
@@ -2248,7 +2333,7 @@ function saveTasks(){
   });
 
   updateBreakGameAvailability();
-  $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();showToast("Completed tasks cleared.");};
+  $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();updateBreakGameAvailability();showToast("Completed tasks cleared.");};
 })();
 
 /* Walking reset activity */
