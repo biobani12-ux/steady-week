@@ -297,7 +297,7 @@
 @keyframes completeBounce { from { transform: translateY(2px); } to { transform: translateY(-8px); } }
 
 
-/* All Break activities use the same full-screen stage */
+/* All Break activities use the same true full-screen stage */
 .sheet {
   position: fixed !important;
   inset: 0 !important;
@@ -309,10 +309,10 @@
   padding: 0 !important;
   border-radius: 0 !important;
   z-index: 10000 !important;
-  overflow: auto !important;
+  overflow: hidden auto !important;
   display: none;
-  align-items: center !important;
-  justify-content: center !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
 }
 .sheet.open {
   display: flex !important;
@@ -325,20 +325,101 @@
   z-index: -1;
 }
 .sheet-card {
-  width: min(760px, 100vw) !important;
-  min-height: 100dvh;
-  max-height: 100dvh !important;
+  width: 100% !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
   border-radius: 0 !important;
   border: 0 !important;
   box-shadow: none !important;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: clamp(22px, 5vw, 56px) !important;
+  justify-content: flex-start !important;
+  padding: max(22px, env(safe-area-inset-top)) clamp(20px, 5vw, 56px) max(22px, env(safe-area-inset-bottom)) !important;
   box-sizing: border-box;
 }
 .sheet-head {
   flex: 0 0 auto;
+}
+
+
+/* Refined walking visual: abstract animated footprints */
+.walk-visual {
+  position: relative;
+  height: clamp(180px, 28vh, 270px);
+  margin: 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.footprint-path {
+  position: relative;
+  width: 190px;
+  height: 210px;
+  transform: rotate(-7deg);
+}
+.footprint {
+  position: absolute;
+  width: 30px;
+  height: 58px;
+  border: 3px solid currentColor;
+  border-radius: 52% 48% 46% 44%;
+  opacity: .22;
+  transform-origin: 50% 85%;
+  animation: footprintWalk 3.6s ease-in-out infinite;
+}
+.footprint::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  top: -5px;
+  left: 5px;
+}
+.footprint.left { transform: rotate(8deg); }
+.footprint.right { transform: rotate(-8deg); }
+.fp1 { left: 36px; top: 142px; animation-delay: 0s; }
+.fp2 { left: 104px; top: 112px; animation-delay: .6s; }
+.fp3 { left: 24px; top: 84px; animation-delay: 1.2s; }
+.fp4 { left: 96px; top: 54px; animation-delay: 1.8s; }
+.fp5 { left: 42px; top: 25px; animation-delay: 2.4s; }
+.fp6 { left: 112px; top: 0; animation-delay: 3s; }
+
+@keyframes footprintWalk {
+  0%, 100% { opacity: .13; transform: translateY(7px) scale(.94) rotate(8deg); }
+  35% { opacity: .5; transform: translateY(0) scale(1) rotate(8deg); }
+  70% { opacity: .2; transform: translateY(-5px) scale(.97) rotate(8deg); }
+}
+.footprint.right {
+  animation-name: footprintWalkRight;
+}
+@keyframes footprintWalkRight {
+  0%, 100% { opacity: .13; transform: translateY(7px) scale(.94) rotate(-8deg); }
+  35% { opacity: .5; transform: translateY(0) scale(1) rotate(-8deg); }
+  70% { opacity: .2; transform: translateY(-5px) scale(.97) rotate(-8deg); }
+}
+
+/* Walking screen spacing */
+#walkSheet .sheet-card {
+  justify-content: flex-start !important;
+  padding-top: max(18px, env(safe-area-inset-top)) !important;
+}
+#walkSheet .sheet-head {
+  margin-bottom: 2px;
+}
+#walkSheet .walk-subtitle {
+  margin-top: 0;
+}
+#walkSheet .walk-time {
+  margin-top: 4px;
+}
+#walkSheet .walk-prompt {
+  margin-bottom: 12px;
+}
+#walkSheet .walk-controls {
+  margin-top: 10px;
 }
 
 </style>
@@ -352,6 +433,12 @@
   #walkSheet .walk-time { font-size: 52px; margin: 4px 0 6px; }
   #walkSheet .walk-note { display: none; }
 }
+</style>
+
+
+<style>
+#walkSheet .walk-card.walk-complete .walk-visual { height: clamp(160px, 25vh, 230px); }
+#walkSheet .walk-card.walk-complete .footprint-path { opacity: .65; }
 </style>
 
 </head>
@@ -465,16 +552,13 @@
     <div class="walk-subtitle" id="walkSubtitle">10 minutes. No destination required.</div>
 
     <div class="walk-visual" aria-hidden="true">
-      <div class="walk-figure" id="walkFigure">
-        <span class="walk-head"></span>
-        <span class="walk-body"></span>
-        <span class="walk-arm walk-arm-left"></span>
-        <span class="walk-arm walk-arm-right"></span>
-        <span class="walk-leg walk-leg-left"></span>
-        <span class="walk-leg walk-leg-right"></span>
-      </div>
-      <div class="walk-steps">
-        <span>·</span><span>·</span><span>·</span>
+      <div class="footprint-path">
+        <span class="footprint left fp1"></span>
+        <span class="footprint right fp2"></span>
+        <span class="footprint left fp3"></span>
+        <span class="footprint right fp4"></span>
+        <span class="footprint left fp5"></span>
+        <span class="footprint right fp6"></span>
       </div>
     </div>
 
