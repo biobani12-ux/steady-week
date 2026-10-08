@@ -58,11 +58,6 @@
   .break-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .break-card{background:white;border:1px solid var(--line);border-radius:18px;padding:22px 12px;text-align:center;min-height:105px}
   .break-card b{display:block;margin-top:10px}.break-card span{font-size:12px;color:var(--muted)}
-  .break-card.play-card.locked{opacity:.48;cursor:not-allowed;background:#f5f5f5}
-  .break-card.play-card.locked .break-icon{filter:grayscale(1)}
-  .break-card.play-card.unlocked{border-color:#111}
-  .break-card .break-icon{font-size:30px;line-height:1}
-
   .wordle-sheet .panel{padding-bottom:24px;touch-action:pan-y;width:100%;max-width:430px;box-sizing:border-box;overflow-x:hidden;overscroll-behavior:contain}
   .wordle-head{display:flex;align-items:center;justify-content:space-between}
   .wordle-head h2{margin:0}
@@ -133,6 +128,7 @@
   .stretch-hint{text-align:center;color:#777;min-height:40px}
   .walk-progress{height:10px;background:#eee;border-radius:10px;overflow:hidden;margin:20px 0}.walk-progress i{display:block;height:100%;width:0;background:#111}
   .doodle-canvas{width:100%;height:300px;border:1px solid #ddd;border-radius:16px;touch-action:none;background:#fff;display:block}
+  .doodle-canvas{box-shadow:inset 0 0 0 1px #eee;cursor:crosshair;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .activity-note{text-align:center;color:#777;font-size:13px;line-height:1.45}
   .routine{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--line);padding:14px;border-radius:15px;margin:8px 0}
   .routine button{margin-left:auto;border:0;background:#111;color:#fff;width:30px;height:30px;border-radius:50%}.routine-actions{margin-left:auto;display:flex;gap:6px}.routine-actions button{margin:0;border:1px solid #ddd;background:white;color:#111;width:32px;height:32px;border-radius:50%}.routine-actions .add{background:#111;color:#fff;border-color:#111}.routine-empty{padding:28px 10px;text-align:center;color:#777}.break-return{display:block;background:#111;color:#fff;border-radius:15px;padding:16px;margin:0 0 14px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.12)}.break-return.waiting{background:#f3f3f3;color:#111;box-shadow:none}.break-return .primary{background:#fff;color:#111;margin-top:12px}.break-return.waiting .primary{display:none}.break-return b{display:block;margin-bottom:4px}.break-return span{font-size:12px;opacity:.75}
@@ -230,10 +226,7 @@
       <div class="choice-row" id="routineFilter">
         <button class="choice selected" data-f="Daily">Daily</button><button class="choice" data-f="Weekly">Weekly</button><button class="choice" data-f="Biweekly">Biweekly</button><button class="choice" data-f="Monthly">Monthly</button>
       </div>
-      <div class="choice-row" style="margin-top:8px">
-        <button class="choice" data-f="Quarterly">Quarterly</button><button class="choice" data-f="Yearly">Yearly</button>
-      </div>
-      <div id="routineList"></div>
+            <div id="routineList"></div>
     </div>
   </section>
 
@@ -259,24 +252,12 @@
     <div class="content">
       <div class="break-return waiting" id="breakReturn"><b id="breakReturnTitle">No paused timer</b><span id="breakReturnText">Start a task timer, then use “Take a break” to pause it here.</span><button class="primary" id="returnToFocus" style="margin-top:12px">Return to timer</button></div>
       <div class="break-grid">
-        <button class="break-card play-card" data-kind="wordle" data-min="5" data-requires-complete="true">
-          <div class="break-icon">🟩</div><b>Wordle</b><span>Finish today’s tasks to unlock</span>
-        </button>
-        <button class="break-card" data-kind="walk" data-min="10">
-          <div class="break-icon">🚶</div><b>Walk</b><span>10 min</span>
-        </button>
-        <button class="break-card play-card" data-kind="doodle" data-min="5" data-requires-complete="true">
-          <div class="break-icon">🎨</div><b>Doodle</b><span>Finish today’s tasks to unlock</span>
-        </button>
-        <button class="break-card" data-kind="lofi" data-min="15">
-          <div class="break-icon">🎧</div><b>Lo-fi music</b><span>15 min</span>
-        </button>
-        <button class="break-card" data-kind="breathing" data-min="3">
-          <div class="break-icon">🫁</div><b>Breathing</b><span>3 min</span>
-        </button>
-        <button class="break-card" data-kind="stretch" data-min="5">
-          <div class="break-icon">🧘</div><b>Stretch</b><span>5 min</span>
-        </button>
+        <button class="break-card" data-kind="wordle" data-min="5"><div class="break-icon">▦</div><b>Wordle</b><span>5 min</span></button>
+        <button class="break-card" data-kind="walk" data-min="10"><div class="break-icon">♧</div><b>Walk</b><span>10 min</span></button>
+        <button class="break-card" data-kind="doodle" data-min="5"><div class="break-icon">✎</div><b>Doodle</b><span>5 min</span></button>
+        <button class="break-card" data-kind="lofi" data-min="15"><div class="break-icon">♫</div><b>Lo-fi music</b><span>15 min</span></button>
+        <button class="break-card" data-kind="breathing" data-min="3"><div class="break-icon">○</div><b>Breathing</b><span>3 min</span></button>
+        <button class="break-card" data-kind="stretch" data-min="5"><div class="break-icon">⌁</div><b>Stretch</b><span>5 min</span></button>
       </div>
     </div>
   </section>
@@ -320,10 +301,10 @@
   <div class="panel">
     <div class="sheet-head"><h2>Add routine</h2><button class="close-sheet" id="closeRoutine">×</button></div>
     <label>What do you repeat?</label>
-    <input id="routineName" placeholder="e.g. Prepare Lily for school">
+    <input id="routineName" placeholder="e.g. Prepare for the morning">
     <div class="row">
       <div><label>Repeat</label>
-        <select id="routineFreq"><option>Daily</option><option>Weekly</option><option>Biweekly</option><option>Monthly</option><option>Quarterly</option><option>Yearly</option></select>
+        <select id="routineFreq"><option>Daily</option><option>Weekly</option><option>Biweekly</option><option>Monthly</option></select>
       </div>
       <div><label>Duration (minutes)</label><input id="routineDuration" type="number" min="1" step="1" value="15"></div>
     </div>
@@ -433,9 +414,9 @@
 const NAME_KEY = "adhdAppUserName_v1";
 
 const defaultTasks = [
-  {id:1,name:"Drop Lily at bus",when:"08:15",duration:15,done:false,taskDate:new Date().toISOString().slice(0,10)},
-  {id:2,name:"Client status update",when:"11:00",duration:30,done:false,taskDate:new Date().toISOString().slice(0,10)},
-  {id:3,name:"Walk",when:"17:00",duration:20,done:false,taskDate:new Date().toISOString().slice(0,10)}
+  {id:1,name:"Morning preparation",when:"08:15",duration:15,done:false,taskDate:new Date().toISOString().slice(0,10)},
+  {id:2,name:"Review work messages",when:"11:00",duration:30,done:false,taskDate:new Date().toISOString().slice(0,10)},
+  {id:3,name:"Take a walk",when:"17:00",duration:20,done:false,taskDate:new Date().toISOString().slice(0,10)}
 ];
 
 function loadTasks(){
@@ -443,7 +424,12 @@ function loadTasks(){
     const saved=localStorage.getItem(TASKS_KEY);
     if(saved){
       const parsed=JSON.parse(saved);
-      if(Array.isArray(parsed)) return parsed;
+      if(Array.isArray(parsed)){
+        // Keep demo/default content generic even when an older build stored personal demo text.
+        return parsed.map(t => t && t.name === "Drop Lily at bus"
+          ? {...t, name:"Morning preparation"}
+          : t);
+      }
     }
   }catch(e){}
   return defaultTasks;
@@ -471,7 +457,7 @@ function saveTasks(){
     try{const saved=localStorage.getItem(ROUTINES_KEY);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))return parsed;}}catch(e){}
     return defaultRoutines;
   }
-  let routines = loadRoutines();
+  let routines = loadRoutines().filter(r=>["Daily","Weekly","Biweekly","Monthly"].includes(r.freq));
   function saveRoutines(){try{localStorage.setItem(ROUTINES_KEY,JSON.stringify(routines));}catch(e){console.warn("Could not save routines",e);}}
   saveRoutines();
   let events = [];
@@ -486,31 +472,6 @@ function saveTasks(){
   const showToast=t=>{ $("toast").textContent=t; $("toast").style.display="block"; setTimeout(()=>$("toast").style.display="none",1800); };
 
   $("todayLabel").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short"});
-  function todayTaskStatus(){
-    const today=todayISO();
-    const todayTasks=tasks.filter(t=>(t.taskDate||today)===today);
-    return {
-      hasTasks: todayTasks.length>0,
-      allDone: todayTasks.length>0 && todayTasks.every(t=>t.done)
-    };
-  }
-
-  function updateBreakAccess(){
-    const status=todayTaskStatus();
-    document.querySelectorAll('.break-card[data-requires-complete="true"]').forEach(card=>{
-      const locked=!status.allDone;
-      card.classList.toggle("locked",locked);
-      card.classList.toggle("unlocked",!locked);
-      card.setAttribute("aria-disabled",locked?"true":"false");
-      const span=card.querySelector("span");
-      if(span){
-        span.textContent=locked
-          ? (status.hasTasks ? "Finish today’s tasks to unlock" : "Add today’s tasks first")
-          : `${card.dataset.min} min`;
-      }
-    });
-  }
-
   function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
     $(id).classList.add("active");
@@ -646,7 +607,7 @@ function saveTasks(){
 
 
   function renderTasks(){ const box=$("taskList");box.innerHTML="";const sorted=[...tasks].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));renderDayTimeline(sorted);if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>';return;}sorted.forEach(t=>{const el=document.createElement("div");el.className="task"+(t.done?" done":"");el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min${t.steps?` · ${t.steps.length} steps`:""}</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;el.querySelector(".check").addEventListener("click",()=>{t.done=!t.done;saveTasks();renderTasks()});el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
-      el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));box.appendChild(el)}); updateBreakAccess(); }
+      el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));box.appendChild(el)}) }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
   function getGreeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Hi there":"Good evening";}
   function setupIdentity(){let saved=localStorage.getItem(NAME_KEY);
@@ -1371,16 +1332,139 @@ function saveTasks(){
     lastWordleTap=now;
   },{passive:false});
 
-  document.querySelectorAll(".break-card").forEach(b=>b.onclick=()=>{
-    const label=b.querySelector("b").textContent;
-    if(b.dataset.requiresComplete==="true" && !todayTaskStatus().allDone){
-      showToast(todayTaskStatus().hasTasks
-        ? `Finish today’s tasks to unlock ${label}.`
-        : `Add today’s tasks before unlocking ${label}.`);
-      return;
+  // Doodle: a real 5-minute free-drawing break.
+  let doodleTimer = null;
+  let doodleRemaining = 300;
+  let doodleDrawing = false;
+
+  const DOODLE_PROMPTS = [
+    "Draw something that makes you smile.",
+    "Turn three random lines into a tiny creature.",
+    "Fill the page with loops, dots and little shapes.",
+    "Draw your perfect tiny garden.",
+    "Make a silly monster with five different eyes.",
+    "Draw a room you would love to relax in."
+  ];
+
+  function closeBreakActivity(){
+    if(doodleTimer){clearInterval(doodleTimer); doodleTimer=null;}
+    doodleDrawing=false;
+    $("breakActivitySheet").classList.remove("show");
+  }
+
+  function formatActivityTime(sec){
+    return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
+  }
+
+  function setupDoodleCanvas(canvas){
+    const ctx=canvas.getContext("2d");
+    const ratio=Math.max(1,window.devicePixelRatio||1);
+
+    function resize(){
+      const rect=canvas.getBoundingClientRect();
+      const old=canvas.toDataURL();
+      canvas.width=Math.round(rect.width*ratio);
+      canvas.height=Math.round(rect.height*ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+      ctx.lineCap="round";
+      ctx.lineJoin="round";
+      ctx.lineWidth=3;
+      ctx.strokeStyle="#111";
+      if(old){
+        const img=new Image();
+        img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);
+        img.src=old;
+      }
     }
-    if(label==="Wordle"){startWordle();return;}
-    if(label==="Doodle" && typeof startDoodle==="function"){startDoodle();return;}
+
+    resize();
+
+    const point=(e)=>{
+      const r=canvas.getBoundingClientRect();
+      return {x:e.clientX-r.left,y:e.clientY-r.top};
+    };
+
+    canvas.onpointerdown=(e)=>{
+      doodleDrawing=true;
+      canvas.setPointerCapture?.(e.pointerId);
+      const p=point(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y);
+      e.preventDefault();
+    };
+
+    canvas.onpointermove=(e)=>{
+      if(!doodleDrawing)return;
+      const p=point(e);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+      e.preventDefault();
+    };
+
+    const stop=(e)=>{
+      doodleDrawing=false;
+      try{canvas.releasePointerCapture?.(e.pointerId)}catch(_){}
+    };
+    canvas.onpointerup=stop;
+    canvas.onpointercancel=stop;
+    canvas.onpointerleave=stop;
+
+    window.addEventListener("resize",resize,{passive:true});
+    return ctx;
+  }
+
+  function startDoodle(){
+    if(doodleTimer){clearInterval(doodleTimer);doodleTimer=null;}
+    doodleRemaining=300;
+    $("breakActivityTitle").textContent="Doodle";
+    $("breakActivityContent").innerHTML=`
+      <div class="activity-note" style="margin:4px 0 12px">
+        ${DOODLE_PROMPTS[Math.floor(Math.random()*DOODLE_PROMPTS.length)]}
+      </div>
+      <div class="activity-timer" id="doodleTimer">5:00</div>
+      <canvas class="doodle-canvas" id="doodleCanvas" aria-label="Doodle drawing area"></canvas>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="secondary" id="clearDoodle" style="flex:1">Clear</button>
+        <button class="primary" id="finishDoodle" style="flex:1">Done</button>
+      </div>
+      <div class="activity-note" style="margin-top:10px">No goal. Just draw.</div>
+    `;
+    $("breakActivitySheet").classList.add("show");
+
+    const canvas=$("doodleCanvas");
+    const ctx=setupDoodleCanvas(canvas);
+
+    $("clearDoodle").onclick=()=>{
+      const r=canvas.getBoundingClientRect();
+      ctx.clearRect(0,0,r.width,r.height);
+    };
+
+    const finish=()=>{
+      if(doodleTimer){clearInterval(doodleTimer);doodleTimer=null;}
+      closeBreakActivity();
+      showToast("Doodle break complete. Tiny brain holiday achieved.");
+    };
+    $("finishDoodle").onclick=finish;
+
+    doodleTimer=setInterval(()=>{
+      doodleRemaining--;
+      $("doodleTimer").textContent=formatActivityTime(Math.max(0,doodleRemaining));
+      if(doodleRemaining<=0){
+        clearInterval(doodleTimer);
+        doodleTimer=null;
+        $("doodleTimer").textContent="Done ✓";
+        showToast("Doodle break complete.");
+      }
+    },1000);
+  }
+
+  $("closeBreakActivity").onclick=closeBreakActivity;
+
+  document.querySelectorAll(".break-card").forEach(b=>b.onclick=()=>{
+    const kind=b.dataset.kind;
+    if(kind==="wordle"){startWordle();return;}
+    if(kind==="doodle"){startDoodle();return;}
+    const label=b.querySelector("b").textContent;
     showToast(`${label} · ${b.dataset.min} min break started.`);
   });
   $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();showToast("Completed tasks cleared.");};
