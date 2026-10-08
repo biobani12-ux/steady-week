@@ -25,6 +25,10 @@
   .mic{width:56px;height:56px;border:0;border-radius:50%;background:#fff;color:#111;font-size:22px}
   .task-input{flex:1;background:#242424;border:1px solid #444;color:#fff;border-radius:14px;padding:14px}
   .task-input::placeholder{color:#aaa}
+  .quick-voice-mini{display:flex;gap:10px;align-items:center;background:#111;color:#fff;border-radius:16px;padding:10px;margin-bottom:14px}
+  .mini-mic{width:44px;height:44px;min-width:44px;font-size:17px}
+  .mini-voice-input{min-width:0;padding:12px;background:#242424}
+  .mini-mic.listening{background:#ddd!important;color:#111}
   .section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 3px 10px;font-weight:700}
   .link{border:0;background:none;color:var(--muted);font-size:13px}
   .task{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;margin:9px 0;display:flex;gap:12px;align-items:center}
@@ -880,11 +884,28 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 }
 </style>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style id="google-backup-ui">
+.backup-sheet .panel{max-width:430px;width:100%;box-sizing:border-box}
+.backup-status{margin:14px 0;padding:14px;border:1px solid #e5e5e5;border-radius:16px;background:#fafaf8}
+.backup-status strong{display:block;font-size:16px;margin-bottom:4px}
+.backup-status span{display:block;font-size:13px;color:#777;line-height:1.4}
+.backup-actions{display:grid;gap:10px;margin-top:14px}
+.backup-actions button{min-height:48px}
+.backup-note{font-size:11px;color:#888;line-height:1.45;margin-top:14px}
+.backup-divider{height:1px;background:#eee;margin:18px 0}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #eee}
+.settings-row:last-child{border-bottom:0}
+.settings-label b{display:block;font-size:15px}
+.settings-label span{display:block;color:#888;font-size:12px;margin-top:3px}
+.settings-gear{font-size:20px}
+</style>
 </head>
 <body>
 <div class="app">
   <section id="home" class="screen active">
-    <header><div class="greeting-wrap"><div class="greeting-line"><h1 id="greeting">Today</h1><button class="edit-name-btn" id="editNameBtn" aria-label="Change name">✎</button></div><div class="date" id="todayLabel"></div></div><button class="icon-btn" id="addBtn">+</button></header>
+    <header><div class="greeting-wrap"><div class="greeting-line"><h1 id="greeting">Today</h1><button class="edit-name-btn" id="editNameBtn" aria-label="Change name">✎</button></div><div class="date" id="todayLabel"></div></div><div style="display:flex;gap:8px"><button class="icon-btn settings-gear" id="settingsBtn" aria-label="Settings">⚙</button><button class="icon-btn" id="addBtn">+</button></div></header>
     <div class="content">
       <div class="voice-box">
         <small>QUICK ADD</small>
@@ -919,6 +940,10 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   <section id="routines" class="screen">
     <header><div><h1>Routines</h1><div class="date">Things you do again and again</div></div><button class="icon-btn" id="routineAdd">+</button></header>
     <div class="content">
+      <div class="quick-voice-mini">
+        <button class="mic mini-mic" id="routineVoiceBtn" aria-label="Start routine voice input">●</button>
+        <input class="task-input mini-voice-input" id="routineQuickInput" placeholder='Say a routine, e.g. "Morning walk for 20 minutes daily"'>
+      </div>
       <div class="choice-row" id="routineFilter">
         <button class="choice selected" data-f="Daily">Daily</button><button class="choice" data-f="Weekly">Weekly</button><button class="choice" data-f="Biweekly">Biweekly</button><button class="choice" data-f="Monthly">Monthly</button>
       </div>
@@ -929,6 +954,10 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   <section id="calendar" class="screen">
     <header><div><h1>Calendar</h1><div class="date">See what is waiting for you.</div></div><button class="icon-btn" id="calendarAdd">+</button></header>
     <div class="content">
+      <div class="quick-voice-mini">
+        <button class="mic mini-mic" id="calendarVoiceBtn" aria-label="Start calendar voice input">●</button>
+        <input class="task-input mini-voice-input" id="calendarQuickInput" placeholder='Say a task, e.g. "Doctor appointment tomorrow at 4 PM"'>
+      </div>
       <div class="calendar">
         <div class="cal-head">
           <button class="cal-nav" id="prevMonth" aria-label="Previous month">‹</button>
@@ -1112,11 +1141,296 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   </div>
 </div>
 
+
+<div class="sheet" id="settingsSheet">
+  <div class="panel">
+    <div class="sheet-head"><h2>Settings</h2><button class="close-sheet" id="closeSettings">×</button></div>
+    <div class="settings-row">
+      <div class="settings-label"><b>Google backup</b><span>Keep a copy of your Steady Week data in your Google account.</span></div>
+      <button class="secondary" id="openBackup">Manage</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label"><b>Local data</b><span>Your data remains on this device even without Google backup.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet backup-sheet" id="backupSheet">
+  <div class="panel">
+    <div class="sheet-head"><h2>Google backup</h2><button class="close-sheet" id="closeBackup">×</button></div>
+    <div class="date" style="margin-top:4px">Optional backup for moving to another phone. Each Google account gets its own private app backup.</div>
+    <div class="backup-status" id="backupStatus">
+      <strong>Not connected</strong>
+      <span>Connect Google to back up and restore your Steady Week data.</span>
+    </div>
+    <div class="backup-actions">
+      <button class="primary" id="googleConnect">Connect Google</button>
+      <button class="secondary" id="googleBackup">Back up now</button>
+      <button class="secondary" id="googleRestore">Restore backup</button>
+    </div>
+    <div class="backup-note" id="backupNote">Your backup is stored in Google's private appDataFolder for this app. Steady Week does not read your normal Drive files, and your backup data is not sent to a Steady Week server.</div>
+    <div class="backup-divider"></div>
+    <button class="link" id="googleDisconnect">Disconnect Google on this device</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
+
+  // Google Drive backup configuration.
+  // Replace this with your Google Cloud OAuth 2.0 Web client ID before publishing.
+  const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+  const GOOGLE_BACKUP_FILE = "steady-week-backup.json";
+  const GOOGLE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+  // Public-app design: Google is only used as each user's private backup store.
+  // No Steady Week server receives or stores user task data.
+  const GOOGLE_BACKUP_SCHEMA = 1;
+  let googleTokenClient = null;
+  let googleAccessToken = null;
+  let googleBackupFileId = localStorage.getItem("steadyWeekGoogleBackupFileId_v1") || null;
+
+  const BACKUP_KEYS = [
+    "adhdAppTasks_v1",
+    "adhdAppRoutines_v1",
+    "steadyWeekProgress_v1",
+    "adhdAppUserName_v1",
+    "adhdAppUserName",
+    "adhdAppPausedFocus_v1"
+  ];
+
+  function backupSnapshot(){
+    const data = {};
+    BACKUP_KEYS.forEach(k => {
+      const v = localStorage.getItem(k);
+      if(v !== null) data[k] = v;
+    });
+    return {
+      schema: GOOGLE_BACKUP_SCHEMA,
+      app: "Steady Week",
+      savedAt: new Date().toISOString(),
+      data
+    };
+  }
+
+  function updateBackupStatus(title, detail){
+    const box = $("backupStatus");
+    if(!box) return;
+    box.innerHTML = "<strong>"+escapeHtml(title)+"</strong><span>"+escapeHtml(detail)+"</span>";
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function googleConfigured(){
+    return GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_");
+  }
+
+  function loadGoogleIdentity(){
+    if(!googleConfigured()){
+      updateBackupStatus("Google setup needed","Add your Google OAuth Web client ID to GOOGLE_CLIENT_ID in index.html first.");
+      return false;
+    }
+    if(!window.google || !google.accounts || !google.accounts.oauth2){
+      updateBackupStatus("Google is loading","Please wait a moment and try again.");
+      return false;
+    }
+    if(!googleTokenClient){
+      googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_SCOPE,
+        callback: async response => {
+          if(response.error){
+            updateBackupStatus("Google connection failed", response.error_description || response.error);
+            return;
+          }
+          googleAccessToken = response.access_token;
+          localStorage.setItem("steadyWeekGoogleConnected_v1","1");
+          updateBackupStatus("Google connected","Your Steady Week backup can now be stored in your private app data area.");
+        }
+      });
+    }
+    return true;
+  }
+
+  function connectGoogle(){
+    if(!loadGoogleIdentity()) return;
+    googleTokenClient.requestAccessToken({prompt: googleAccessToken ? "" : "consent"});
+  }
+
+  async function driveFetch(url, options={}){
+    if(!googleAccessToken) throw new Error("Connect Google first.");
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization","Bearer "+googleAccessToken);
+    const response = await fetch(url,{...options,headers});
+    if(response.status === 401){
+      googleAccessToken = null;
+      localStorage.removeItem("steadyWeekGoogleConnected_v1");
+      throw new Error("Google authorization expired. Connect again.");
+    }
+    if(!response.ok){
+      let message = "Google Drive request failed.";
+      try{
+        const err = await response.json();
+        message = err.error?.message || message;
+      }catch(e){}
+      throw new Error(message);
+    }
+    return response;
+  }
+
+  async function findBackupFile(){
+    const q = encodeURIComponent("name='"+GOOGLE_BACKUP_FILE+"' and trashed=false");
+    const url = "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+"&pageSize=10&fields=files(id,name,modifiedTime)";
+    const response = await driveFetch(url);
+    const result = await response.json();
+    return result.files?.[0] || null;
+  }
+
+  async function createBackupFile(payload){
+    const metadata = {
+      name: GOOGLE_BACKUP_FILE,
+      parents: ["appDataFolder"],
+      mimeType: "application/json"
+    };
+    const response = await driveFetch(
+      "https://www.googleapis.com/drive/v3/files?fields=id,name,modifiedTime",
+      {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(metadata)
+      }
+    );
+    const file = await response.json();
+    await uploadBackupContents(file.id,payload);
+    return file;
+  }
+
+  async function uploadBackupContents(fileId,payload){
+    const response = await driveFetch(
+      "https://www.googleapis.com/upload/drive/v3/files/"+encodeURIComponent(fileId)+"?uploadType=media",
+      {
+        method:"PATCH",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload)
+      }
+    );
+    return response.json();
+  }
+
+  async function getCurrentUserBackupFile(){
+    // A cached file ID is only an optimization. If the user changes Google accounts
+    // or the file is no longer accessible, fall back to searching this account's own appDataFolder.
+    if(googleBackupFileId){
+      try{
+        const response = await driveFetch(
+          "https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(googleBackupFileId)+"?fields=id,name,modifiedTime,trashed"
+        );
+        const file = await response.json();
+        if(file?.id && !file.trashed && file.name === GOOGLE_BACKUP_FILE) return file;
+      }catch(error){
+        googleBackupFileId = null;
+        localStorage.removeItem("steadyWeekGoogleBackupFileId_v1");
+      }
+    }
+    return await findBackupFile();
+  }
+
+  async function backupToGoogle(){
+    if(!loadGoogleIdentity()) return;
+    if(!googleAccessToken){
+      connectGoogle();
+      updateBackupStatus("Connect Google first","Authorize access, then tap Back up now again.");
+      return;
+    }
+    try{
+      updateBackupStatus("Backing up…","Saving your tasks, routines, progress and settings.");
+      const payload = backupSnapshot();
+      let file = await getCurrentUserBackupFile();
+      if(file?.id){
+        googleBackupFileId = file.id;
+        localStorage.setItem("steadyWeekGoogleBackupFileId_v1",file.id);
+        await uploadBackupContents(file.id,payload);
+      }else{
+        file = await createBackupFile(payload);
+        googleBackupFileId = file.id;
+        localStorage.setItem("steadyWeekGoogleBackupFileId_v1",file.id);
+      }
+      localStorage.setItem("steadyWeekLastBackup_v1",payload.savedAt);
+      updateBackupStatus("Backed up","Last backup: "+new Date(payload.savedAt).toLocaleString());
+      showToast("Steady Week backed up");
+    }catch(error){
+      updateBackupStatus("Backup failed",error.message);
+    }
+  }
+
+  async function restoreFromGoogle(){
+    if(!loadGoogleIdentity()) return;
+    if(!googleAccessToken){
+      connectGoogle();
+      updateBackupStatus("Connect Google first","Authorize access, then tap Restore backup again.");
+      return;
+    }
+    try{
+      updateBackupStatus("Checking backup…","Looking for your latest Steady Week backup.");
+      let file = await getCurrentUserBackupFile();
+      if(!file?.id){
+        updateBackupStatus("No backup found","There is no Steady Week backup in this Google account.");
+        return;
+      }
+      googleBackupFileId = file.id;
+      localStorage.setItem("steadyWeekGoogleBackupFileId_v1",file.id);
+      const response = await driveFetch(
+        "https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id)+"?alt=media"
+      );
+      const payload = await response.json();
+      if(!payload || payload.schema !== GOOGLE_BACKUP_SCHEMA || payload.app !== "Steady Week" || !payload.data || typeof payload.data !== "object"){
+        throw new Error("The backup file is not a valid Steady Week backup.");
+      }
+      if(!confirm("Restore this backup? Your current local Steady Week data will be replaced.")) return;
+      // Replace only the app-owned backup keys. This never touches unrelated localStorage.
+      BACKUP_KEYS.forEach(key => localStorage.removeItem(key));
+      Object.entries(payload.data).forEach(([key,value]) => {
+        if(BACKUP_KEYS.includes(key) && typeof value === "string") localStorage.setItem(key,value);
+      });
+      updateBackupStatus("Restored","Your backup has been restored. Reloading Steady Week…");
+      setTimeout(()=>location.reload(),700);
+    }catch(error){
+      updateBackupStatus("Restore failed",error.message);
+    }
+  }
+
+  function disconnectGoogle(){
+    googleAccessToken = null;
+    localStorage.removeItem("steadyWeekGoogleConnected_v1");
+    googleBackupFileId = null;
+    localStorage.removeItem("steadyWeekGoogleBackupFileId_v1");
+    updateBackupStatus("Not connected","Google is disconnected on this device. Your local data is unchanged.");
+  }
+
+  function initBackupUI(){
+    $("settingsBtn")?.addEventListener("click",()=>$("settingsSheet").classList.add("show"));
+    $("closeSettings")?.addEventListener("click",()=>$("settingsSheet").classList.remove("show"));
+    $("openBackup")?.addEventListener("click",()=>{
+      $("settingsSheet").classList.remove("show");
+      $("backupSheet").classList.add("show");
+      if(localStorage.getItem("steadyWeekGoogleConnected_v1")){
+        updateBackupStatus("Google connected","Ready to back up or restore.");
+      }else if(!googleConfigured()){
+        updateBackupStatus("Google setup needed","Add your Google OAuth Web client ID to GOOGLE_CLIENT_ID in index.html first.");
+      }
+    });
+    $("closeBackup")?.addEventListener("click",()=>$("backupSheet").classList.remove("show"));
+    $("googleConnect")?.addEventListener("click",connectGoogle);
+    $("googleBackup")?.addEventListener("click",backupToGoogle);
+    $("googleRestore")?.addEventListener("click",restoreFromGoogle);
+    $("googleDisconnect")?.addEventListener("click",disconnectGoogle);
+  }
   const TASKS_KEY = "adhdAppTasks_v1";
 const NAME_KEY = "adhdAppUserName_v1";
 
@@ -1381,7 +1695,31 @@ function saveTasks(){
   // Chrome/Edge expose SpeechRecognition; Safari commonly exposes webkitSpeechRecognition.
   let recognition = null;
   let listening = false;
-  function stopVoiceInput(){if(recognition){try{recognition.stop()}catch(e){}} listening=false;$("voiceBtn").textContent="●";$("voiceBtn").style.background="#fff";$("voiceBtn").setAttribute("aria-label","Start voice input");}
+  let activeVoiceTarget = null;
+  let activeVoiceMode = "task";
+  let ignoreRecognitionEnd = false;
+
+  function resetVoiceButton(id){
+    const btn=$(id);
+    if(!btn) return;
+    btn.textContent="●";
+    btn.style.background="#fff";
+    btn.classList.remove("listening");
+    btn.setAttribute("aria-label","Start voice input");
+  }
+
+  function stopVoiceInput(){
+    ignoreRecognitionEnd = true;
+    if(recognition){
+      try{ recognition.abort(); }catch(e){ try{ recognition.stop(); }catch(e2){} }
+    }
+    listening=false;
+    activeVoiceTarget=null;
+    activeVoiceMode="task";
+    resetVoiceButton("voiceBtn");
+    resetVoiceButton("routineVoiceBtn");
+    resetVoiceButton("calendarVoiceBtn");
+  }
 
   function parseVoiceTask(text){
     let clean = text.trim();
@@ -1507,7 +1845,7 @@ function saveTasks(){
     openSheet();
   }
 
-  function setupRecognition(){
+  function setupRecognition(targetId, mode="task"){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SpeechRecognition){
       showToast("Voice input isn't supported in this browser. Try Chrome or Safari.");
@@ -1516,14 +1854,22 @@ function saveTasks(){
     const r = new SpeechRecognition();
     r.lang = "en-IN";
     r.interimResults = true;
-    r.continuous = false;
+    r.continuous = true;
+    activeVoiceTarget = targetId;
+    activeVoiceMode = mode;
+    ignoreRecognitionEnd = false;
 
     r.onstart = ()=>{
       listening = true;
-      $("voiceBtn").textContent = "■";
-      $("voiceBtn").style.background = "#ddd";
-      $("voiceBtn").setAttribute("aria-label","Stop listening");
-      showToast("Listening…");
+      const btnId = mode==="routine" ? "routineVoiceBtn" : mode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
+      const btn=$(btnId);
+      if(btn){
+        btn.textContent="■";
+        btn.style.background="#ddd";
+        btn.classList.add("listening");
+        btn.setAttribute("aria-label","Stop listening");
+      }
+      showToast("Listening… Tap ■ when you're finished.");
     };
 
     r.onresult = (event)=>{
@@ -1531,46 +1877,88 @@ function saveTasks(){
       for(let i=event.resultIndex;i<event.results.length;i++){
         transcript += event.results[i][0].transcript;
       }
-      $("quickInput").value = transcript;
+      const target=$(activeVoiceTarget);
+      if(target) target.value = transcript;
     };
 
     r.onerror = (event)=>{
+      if(ignoreRecognitionEnd) return;
       listening = false;
-      $("voiceBtn").textContent = "●";
-      $("voiceBtn").style.background = "#fff";
+      const btnId = mode==="routine" ? "routineVoiceBtn" : mode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
+      resetVoiceButton(btnId);
       if(event.error === "not-allowed" || event.error === "service-not-allowed"){
         showToast("Microphone permission was blocked. Allow mic access and try again.");
       } else if(event.error === "no-speech"){
         showToast("I didn't hear anything. Try again.");
-      } else {
-        showToast("Voice input failed. You can type the task instead.");
+      } else if(event.error !== "aborted"){
+        showToast("Voice input failed. You can type instead.");
       }
     };
 
     r.onend = ()=>{
+      const wasIgnored = ignoreRecognitionEnd;
       listening = false;
-      $("voiceBtn").textContent = "●";
-      $("voiceBtn").style.background = "#fff";
-      $("voiceBtn").setAttribute("aria-label","Start voice input");
+      const finishedMode = activeVoiceMode;
+      const finishedTarget = activeVoiceTarget;
+      const btnId = finishedMode==="routine" ? "routineVoiceBtn" : finishedMode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
+      resetVoiceButton(btnId);
+      if(wasIgnored) return;
 
-      const text = $("quickInput").value.trim();
-      if(text){
-        fillTaskFormFromText(text);
+      activeVoiceTarget=null;
+      if(finishedMode==="task"){
+        const text=$(finishedTarget || "quickInput")?.value.trim();
+        if(text) fillTaskFormFromText(text);
+      }else if(finishedMode==="routine"){
+        const text=$(finishedTarget)?.value.trim();
+        if(text){
+          $("routineName").value=text;
+          $("routineQuickInput").value="";
+          $("routineDuration").value="15";
+          $("routineFreq").value="Daily";
+          $("routineStart").value=todayISO();
+          $("routineSheet").classList.add("show");
+        }
+      }else if(finishedMode==="calendar"){
+        const text=$(finishedTarget)?.value.trim();
+        if(text){
+          $("calTask").value=text;
+          $("calendarQuickInput").value="";
+          $("calDate").value=todayISO();
+          $("calTime").value="";
+          $("calendarSheet").classList.add("show");
+        }
       }
     };
     return r;
   }
 
-  $("voiceBtn").addEventListener("click",()=>{
+  function startVoice(targetId, mode){
     if(listening && recognition){
-      recognition.stop();
+      stopVoiceInput();
       return;
     }
-    recognition = setupRecognition();
+    recognition = setupRecognition(targetId, mode);
     if(recognition){
       try { recognition.start(); }
       catch(e) { showToast("Microphone is already active. Try again in a moment."); }
     }
+  }
+
+  $("voiceBtn").addEventListener("click",()=>startVoice("quickInput","task"));
+  $("routineVoiceBtn")?.addEventListener("click",()=>startVoice("routineQuickInput","routine"));
+  $("calendarVoiceBtn")?.addEventListener("click",()=>startVoice("calendarQuickInput","calendar"));
+
+  // Never leave the microphone running when the app is backgrounded or closed.
+  function stopVoiceOnBackground(){
+    if(listening || recognition) stopVoiceInput();
+  }
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden) stopVoiceOnBackground();
+  });
+  window.addEventListener("pagehide",stopVoiceOnBackground);
+  window.addEventListener("beforeunload",stopVoiceOnBackground);
+  window.addEventListener("blur",()=>{
+    if(document.visibilityState !== "visible") stopVoiceOnBackground();
   });
 
   $("quickInput").addEventListener("keydown",e=>{
@@ -2477,6 +2865,8 @@ function saveTasks(){
   render();
 })();
 
+
+  initBackupUI();
 </script>
 
 <script>
