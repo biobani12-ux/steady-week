@@ -121,6 +121,32 @@
   .doodle-canvas{width:100%;height:300px;border:1px solid #ddd;border-radius:16px;touch-action:none;background:#fff;display:block}
   .doodle-canvas{box-shadow:inset 0 0 0 1px #eee;cursor:crosshair;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .activity-note{text-align:center;color:#777;font-size:13px;line-height:1.45}
+
+  .lofi-wrap{text-align:center;padding:8px 0 4px}
+  .lofi-subtitle{color:#777;font-size:15px;line-height:1.45;margin:0 auto 18px}
+  .lofi-visual{height:230px;display:flex;align-items:center;justify-content:center;position:relative}
+  .lofi-disc{width:175px;height:175px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 35px rgba(0,0,0,.10)}
+  .lofi-disc::before{content:"";position:absolute;width:193px;height:193px;border:1px solid #d8d8d5;border-radius:50%}
+  .lofi-label{color:#fff;font-size:28px;font-weight:800;line-height:.78}
+  .lofi-bars{position:absolute;bottom:16px;display:flex;align-items:flex-end;gap:6px;height:34px}
+  .lofi-bars i{display:block;width:5px;height:8px;border-radius:4px;background:#111}
+  .lofi-wrap.playing .lofi-disc{animation:lofiSpin 9s linear infinite}
+  .lofi-wrap.playing .lofi-bars i{animation:lofiPulse 1s ease-in-out infinite alternate}
+  .lofi-bars i:nth-child(2){animation-delay:.12s}.lofi-bars i:nth-child(3){animation-delay:.24s}
+  .lofi-bars i:nth-child(4){animation-delay:.36s}.lofi-bars i:nth-child(5){animation-delay:.18s}
+  .lofi-bars i:nth-child(6){animation-delay:.30s}.lofi-bars i:nth-child(7){animation-delay:.42s}
+  @keyframes lofiSpin{to{transform:rotate(360deg)}}
+  @keyframes lofiPulse{from{height:7px}to{height:32px}}
+  .lofi-track{font-size:20px;font-weight:800;margin-top:2px}
+  .lofi-status{color:#777;font-size:13px;margin-top:6px;min-height:19px}
+  .lofi-play{width:100%;height:54px;border:0;border-radius:28px;background:#111;color:#fff;font-weight:800;font-size:18px;margin-top:18px}
+  .lofi-timers{display:flex;gap:8px;margin-top:10px}
+  .lofi-timers button{flex:1;height:43px;border:1px solid #ddd;border-radius:22px;background:#fff;font-size:14px}
+  .lofi-timers button.active{background:#111;color:#fff;border-color:#111}
+  .lofi-volume{display:flex;align-items:center;gap:10px;margin-top:15px;color:#777;font-size:13px}
+  .lofi-volume input{flex:1;accent-color:#111}
+  .lofi-note{color:#888;font-size:12px;line-height:1.4;margin-top:14px}
+
   .routine{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--line);padding:14px;border-radius:15px;margin:8px 0}
   .routine button{margin-left:auto;border:0;background:#111;color:#fff;width:30px;height:30px;border-radius:50%}.routine-actions{margin-left:auto;display:flex;gap:6px}.routine-actions button{margin:0;border:1px solid #ddd;background:white;color:#111;width:32px;height:32px;border-radius:50%}.routine-actions .add{background:#111;color:#fff;border-color:#111}.routine-empty{padding:28px 10px;text-align:center;color:#777}.break-return{display:block;background:#111;color:#fff;border-radius:15px;padding:16px;margin:0 0 14px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.12)}.break-return.waiting{background:#f3f3f3;color:#111;box-shadow:none}.break-return .primary{background:#fff;color:#111;margin-top:12px}.break-return.waiting .primary{display:none}.break-return b{display:block;margin-bottom:4px}.break-return span{font-size:12px;opacity:.75}
   .timer-screen{text-align:center;padding:35px 18px}
@@ -746,6 +772,114 @@ html body #walkSheet .walk-gif {
 }
 </style>
 
+
+<style id="activity-final-geometry">
+/* Final geometry: activities occupy the entire webpage viewport.
+   Safari's own browser chrome remains outside the webpage and cannot be removed by HTML. */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 100% !important;
+  overflow-x: hidden !important;
+}
+
+html body .sheet.open,
+html body #walkSheet.open,
+html body .sheet.break-activity-sheet.show,
+html body .sheet.wordle-sheet.show {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: var(--bg, #f7f7f5) !important;
+  overflow: hidden auto !important;
+  transform: none !important;
+}
+
+html body .sheet.break-activity-sheet.show > .panel,
+html body .sheet.wordle-sheet.show > .panel,
+html body #walkSheet.open > .sheet-card {
+  position: relative !important;
+  inset: auto !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 8px max(20px, env(safe-area-inset-right))
+           max(18px, env(safe-area-inset-bottom))
+           max(20px, env(safe-area-inset-left)) !important;
+  padding-top: 8px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  background: var(--card, #fff) !important;
+  transform: none !important;
+  overflow: hidden auto !important;
+}
+
+html body .sheet.break-activity-sheet.show > .panel,
+html body .sheet.wordle-sheet.show > .panel {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+}
+
+html body .sheet.open .sheet-head,
+html body #walkSheet.open .sheet-head {
+  margin-top: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+html body #walkSheet.open .walk-visual {
+  margin-top: 6px !important;
+}
+</style>
+
+
+<style id="lofi-fullscreen-fix">
+html body .sheet.break-activity-sheet.show{
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100dvh !important;
+  min-height:100vh !important;
+  margin:0 !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  display:block !important;
+  z-index:10000 !important;
+  background:var(--bg,#f7f7f5) !important;
+}
+html body .sheet.break-activity-sheet.show > .break-activity-panel{
+  width:100vw !important;
+  max-width:none !important;
+  height:100dvh !important;
+  min-height:100dvh !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding: max(18px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left)) !important;
+  border-radius:0 !important;
+  border:0 !important;
+  box-shadow:none !important;
+  overflow:hidden auto !important;
+  box-sizing:border-box !important;
+}
+html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
+  margin-top:0 !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -857,7 +991,8 @@ html body #walkSheet .walk-gif {
     <div class="walk-subtitle" id="walkSubtitle">10 minutes. No destination required.</div>
 
     <div class="walk-visual" aria-hidden="true">
-      <img class="walk-gif" src="walking.gif" alt="">
+      <img class="walk-gif" src="walking.gif" alt=""
+         onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='dezyne_3d-walk-21929.gif';}">
     </div>
 
     <div class="walk-time" id="walkTime">10:00</div>
@@ -1824,6 +1959,7 @@ function saveTasks(){
   function closeBreakActivity(){
     if(doodleTimer){clearInterval(doodleTimer); doodleTimer=null;}
     stopBreathing();
+    if(typeof stopLofi==="function") stopLofi();
     doodleDrawing=false;
     $("breakActivitySheet").classList.remove("show");
   }
@@ -1889,6 +2025,146 @@ function saveTasks(){
     return ctx;
   }
 
+
+  // Lo-fi: a lightweight, locally generated ambient beat.
+  let lofiCtx=null, lofiMaster=null, lofiTimer=null, lofiRunning=false, lofiLoopTimer=null;
+  let lofiNoise=null, lofiSelectedMinutes=30;
+
+  function lofiTone(freq, when, duration, gainValue, type="triangle"){
+    if(!lofiCtx || !lofiMaster)return;
+    const osc=lofiCtx.createOscillator();
+    const gain=lofiCtx.createGain();
+    const filter=lofiCtx.createBiquadFilter();
+    osc.type=type;
+    osc.frequency.value=freq;
+    filter.type="lowpass";
+    filter.frequency.value=1200;
+    gain.gain.setValueAtTime(0.0001,when);
+    gain.gain.exponentialRampToValueAtTime(gainValue,when+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001,when+duration);
+    osc.connect(filter);filter.connect(gain);gain.connect(lofiMaster);
+    osc.start(when);osc.stop(when+duration+0.04);
+  }
+
+  function lofiSchedule(start){
+    if(!lofiRunning || !lofiCtx)return;
+    const beat=60/74;
+    const chords=[
+      [220,277.18,329.63],
+      [196,246.94,293.66],
+      [174.61,220,261.63],
+      [196,246.94,329.63]
+    ];
+    for(let bar=0;bar<4;bar++){
+      const t=start+bar*beat*2;
+      chords[bar].forEach((f,i)=>lofiTone(f,t+i*.02,beat*1.75,.018));
+      lofiTone(chords[bar][0]/2,t,.10,.055,"sine");
+      lofiTone(chords[bar][0]/2,t+beat,.08,.038,"sine");
+      lofiTone(55,t+beat*1.5,.06,.025,"sine");
+    }
+    lofiLoopTimer=setTimeout(()=>lofiSchedule(start+beat*8),(beat*8-0.3)*1000);
+  }
+
+  function startLofi(){
+    if(!lofiCtx){
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC){showToast("Lo-fi audio isn't supported in this browser.");return;}
+      lofiCtx=new AC();
+      lofiMaster=lofiCtx.createGain();
+      lofiMaster.gain.value=(Number($("lofiVolume")?.value||55))/100;
+      lofiMaster.connect(lofiCtx.destination);
+
+      const buffer=lofiCtx.createBuffer(1,lofiCtx.sampleRate*2,lofiCtx.sampleRate);
+      const data=buffer.getChannelData(0);
+      let last=0;
+      for(let i=0;i<data.length;i++){
+        last=last*.97+(Math.random()*2-1)*.03;
+        data[i]=last;
+      }
+      lofiNoise=lofiCtx.createBufferSource();
+      lofiNoise.buffer=buffer;
+      lofiNoise.loop=true;
+      const filter=lofiCtx.createBiquadFilter();
+      filter.type="lowpass";filter.frequency.value=850;
+      const gain=lofiCtx.createGain();gain.gain.value=.012;
+      lofiNoise.connect(filter);filter.connect(gain);gain.connect(lofiMaster);
+      lofiNoise.start();
+    }
+    lofiRunning=true;
+    lofiCtx.resume();
+    lofiSchedule(lofiCtx.currentTime+.05);
+    $("lofiWrap")?.classList.add("playing");
+    $("lofiPlay") && ($("lofiPlay").textContent="Pause");
+    $("lofiStatus") && ($("lofiStatus").textContent="Playing softly. You can keep working.");
+    setLofiTimer(lofiSelectedMinutes);
+  }
+
+  function stopLofi(){
+    lofiRunning=false;
+    if(lofiLoopTimer){clearTimeout(lofiLoopTimer);lofiLoopTimer=null;}
+    if(lofiTimer){clearTimeout(lofiTimer);lofiTimer=null;}
+    if(lofiCtx)lofiCtx.suspend();
+    $("lofiWrap")?.classList.remove("playing");
+    if($("lofiPlay"))$("lofiPlay").textContent="Play";
+    if($("lofiStatus"))$("lofiStatus").textContent="Paused. The music will wait.";
+  }
+
+  function setLofiTimer(minutes){
+    lofiSelectedMinutes=minutes;
+    if(lofiTimer)clearTimeout(lofiTimer);
+    if(lofiRunning){
+      lofiTimer=setTimeout(()=>{
+        stopLofi();
+        if($("lofiStatus"))$("lofiStatus").textContent="Timer done. Back to quiet.";
+      },minutes*60*1000);
+    }
+  }
+
+  function startLofiActivity(){
+    stopLofi();
+    $("breakActivityTitle").textContent="Lo-fi";
+    $("breakActivityContent").innerHTML=`
+      <div class="lofi-wrap" id="lofiWrap">
+        <div class="lofi-subtitle">Put the noise down. Keep the music on.</div>
+        <div class="lofi-visual" aria-hidden="true">
+          <div class="lofi-disc"><div class="lofi-label">lo<br>fi</div></div>
+          <div class="lofi-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="lofi-track">slow afternoon</div>
+        <div class="lofi-status" id="lofiStatus">Ready when you are.</div>
+        <button class="lofi-play" id="lofiPlay" type="button">Play</button>
+        <div class="lofi-timers">
+          <button type="button" data-lofi-time="15">15 min</button>
+          <button type="button" data-lofi-time="30" class="active">30 min</button>
+          <button type="button" data-lofi-time="60">60 min</button>
+        </div>
+        <div class="lofi-volume">
+          <span>Volume</span>
+          <input id="lofiVolume" type="range" min="0" max="100" value="55" aria-label="Lo-fi volume">
+        </div>
+        <div class="lofi-note">No productivity score. No task attached. Just background.</div>
+      </div>`;
+
+    $("breakActivitySheet").classList.add("show");
+
+    $("lofiPlay").onclick=()=>{
+      if(lofiRunning) stopLofi(); else startLofi();
+    };
+    document.querySelectorAll("[data-lofi-time]").forEach(btn=>{
+      btn.onclick=()=>{
+        document.querySelectorAll("[data-lofi-time]").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        setLofiTimer(Number(btn.dataset.lofiTime));
+        $("lofiStatus").textContent=lofiRunning
+          ? `Timer set for ${btn.dataset.lofiTime} minutes.`
+          : `${btn.dataset.lofiTime}-minute timer selected.`;
+      };
+    });
+    $("lofiVolume").oninput=(e)=>{
+      if(lofiMaster)lofiMaster.gain.value=Number(e.target.value)/100;
+    };
+  }
+
   function startDoodle(){
     if(!todayTasksAreComplete()){
       updateBreakGameAvailability();
@@ -1908,8 +2184,7 @@ function saveTasks(){
         <button class="secondary" id="clearDoodle" style="flex:1">Clear</button>
         <button class="primary" id="finishDoodle" style="flex:1">Done</button>
       </div>
-      <div class="activity-note" style="margin-top:10px">No goal. Just draw.</div>
-    `;
+          `;
     $("breakActivitySheet").classList.add("show");
 
     const canvas=$("doodleCanvas");
@@ -1957,6 +2232,7 @@ function saveTasks(){
     if(kind==="wordle"){startWordle();return;}
     if(kind==="doodle"){startDoodle();return;}
     if(kind==="breathing"){startBreathing();return;}
+    if(kind==="lofi"){startLofiActivity();return;}
 
     // Walking, Lo-fi music and Stretch remain available at all times.
     const label=b.querySelector("b").textContent;
