@@ -56,7 +56,7 @@
   .secondary{width:100%;padding:13px;border:1px solid #ddd;background:white;border-radius:13px;margin-top:9px}
   .choice-row{display:flex;gap:8px}.choice{flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:12px}.choice.selected{background:#111;color:#fff}
   .break-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .break-card{background:white;border:1px solid var(--line);border-radius:18px;padding:22px 12px;text-align:center;min-height:105px}
+  .break-card{background:white;border:1px solid var(--line);border-radius:18px;padding:22px 12px;text-align:center;min-height:105px}.break-card.locked{opacity:.45;cursor:not-allowed;position:relative}.break-card.locked:after{content:"Locked";display:block;font-size:10px;color:#777;margin-top:6px;font-weight:700}
   .break-card b{display:block;margin-top:10px}.break-card span{font-size:12px;color:var(--muted)}
   .wordle-sheet .panel{padding-bottom:24px;touch-action:pan-y;width:100%;max-width:430px;box-sizing:border-box;overflow-x:hidden;overscroll-behavior:contain}
   .wordle-head{display:flex;align-items:center;justify-content:space-between}
@@ -252,9 +252,9 @@
     <div class="content">
       <div class="break-return waiting" id="breakReturn"><b id="breakReturnTitle">No paused timer</b><span id="breakReturnText">Start a task timer, then use “Take a break” to pause it here.</span><button class="primary" id="returnToFocus" style="margin-top:12px">Return to timer</button></div>
       <div class="break-grid">
-        <button class="break-card" data-kind="wordle" data-min="5"><div class="break-icon">▦</div><b>Wordle</b><span>5 min</span></button>
+        <button class="break-card" data-kind="wordle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon">▦</div><b>Wordle</b><span>5 min</span></button>
         <button class="break-card" data-kind="walk" data-min="10"><div class="break-icon">♧</div><b>Walk</b><span>10 min</span></button>
-        <button class="break-card" data-kind="doodle" data-min="5"><div class="break-icon">✎</div><b>Doodle</b><span>5 min</span></button>
+        <button class="break-card" data-kind="doodle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon">✎</div><b>Doodle</b><span>5 min</span></button>
         <button class="break-card" data-kind="lofi" data-min="15"><div class="break-icon">♫</div><b>Lo-fi music</b><span>15 min</span></button>
         <button class="break-card" data-kind="breathing" data-min="3"><div class="break-icon">○</div><b>Breathing</b><span>3 min</span></button>
         <button class="break-card" data-kind="stretch" data-min="5"><div class="break-icon">⌁</div><b>Stretch</b><span>5 min</span></button>
@@ -472,6 +472,24 @@ function saveTasks(){
   const showToast=t=>{ $("toast").textContent=t; $("toast").style.display="block"; setTimeout(()=>$("toast").style.display="none",1800); };
 
   $("todayLabel").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short"});
+  function todayTasksAreComplete(){
+    const today = todayISO();
+    const todayTasks = tasks.filter(t => (t.taskDate || today) === today);
+    return todayTasks.length > 0 && todayTasks.every(t => t.done === true);
+  }
+
+  function updateBreakGameAvailability(){
+    const unlocked = todayTasksAreComplete();
+    document.querySelectorAll('.break-card[data-requires-complete="true"]').forEach(card=>{
+      card.classList.toggle("locked", !unlocked);
+      card.setAttribute("aria-disabled", unlocked ? "false" : "true");
+      card.title = unlocked
+        ? ""
+        : "Complete all of today's tasks to unlock this game.";
+    });
+    return unlocked;
+  }
+
   function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
     $(id).classList.add("active");
@@ -479,6 +497,7 @@ function saveTasks(){
     if(id==="routines") renderRoutines("Daily");
     if(id==="calendar") renderCalendar();
     if(id==="break"){
+      updateBreakGameAvailability();
       let hasPausedTimer=!!focusTask && remaining>0 && !focusTask.done;
       if(!hasPausedTimer && pausedFocus){
         const restored=tasks.find(t=>t.id===pausedFocus.taskId);
@@ -606,7 +625,12 @@ function saveTasks(){
   $("cancelModify").onclick=closeModify;
 
 
-  function renderTasks(){ const box=$("taskList");box.innerHTML="";const sorted=[...tasks].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));renderDayTimeline(sorted);if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>';return;}sorted.forEach(t=>{const el=document.createElement("div");el.className="task"+(t.done?" done":"");el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min${t.steps?` · ${t.steps.length} steps`:""}</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;el.querySelector(".check").addEventListener("click",()=>{t.done=!t.done;saveTasks();renderTasks()});el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
+  function renderTasks(){ const box=$("taskList");box.innerHTML="";const sorted=[...tasks].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));renderDayTimeline(sorted);if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>';return;}sorted.forEach(t=>{const el=document.createElement("div");el.className="task"+(t.done?" done":"");el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min${t.steps?` · ${t.steps.length} steps`:""}</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;el.querySelector(".check").addEventListener("click",()=>{
+        t.done=!t.done;
+        saveTasks();
+        renderTasks();
+        updateBreakGameAvailability();
+      });el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
       el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));box.appendChild(el)}) }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
   function getGreeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Hi there":"Good evening";}
@@ -1160,6 +1184,11 @@ function saveTasks(){
   const wordleKeyState={};
 
   function startWordle(){
+    if(!todayTasksAreComplete()){
+      updateBreakGameAvailability();
+      showToast("Complete all of today's tasks to unlock Wordle.");
+      return;
+    }
     wordleAnswer=WORDLE_WORDS[Math.floor(Math.random()*WORDLE_WORDS.length)];
     wordleRow=0;wordleGuess="";wordleOver=false;
     window.wordleHistory=[];
@@ -1414,6 +1443,11 @@ function saveTasks(){
   }
 
   function startDoodle(){
+    if(!todayTasksAreComplete()){
+      updateBreakGameAvailability();
+      showToast("Complete all of today's tasks to unlock Doodle.");
+      return;
+    }
     if(doodleTimer){clearInterval(doodleTimer);doodleTimer=null;}
     doodleRemaining=300;
     $("breakActivityTitle").textContent="Doodle";
@@ -1462,11 +1496,26 @@ function saveTasks(){
 
   document.querySelectorAll(".break-card").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.kind;
+
+    // Wordle and Doodle are reward activities: they unlock only after
+    // every task scheduled for today has been completed.
+    if(b.dataset.requiresComplete==="true" && !todayTasksAreComplete()){
+      updateBreakGameAvailability();
+      showToast(kind==="wordle"
+        ? "Finish today's tasks to unlock Wordle."
+        : "Finish today's tasks to unlock Doodle.");
+      return;
+    }
+
     if(kind==="wordle"){startWordle();return;}
     if(kind==="doodle"){startDoodle();return;}
+
+    // Walking, Lo-fi, Breathing and Stretch remain available at all times.
     const label=b.querySelector("b").textContent;
     showToast(`${label} · ${b.dataset.min} min break started.`);
   });
+
+  updateBreakGameAvailability();
   $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();showToast("Completed tasks cleared.");};
 })();
 </script>
