@@ -2393,6 +2393,13 @@ document.addEventListener('click', function(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
     window.openWalkingReset();
+    return;
+  }
+  if ((card.dataset.kind === 'stretch' || text.includes('stretch')) && typeof window.startStretchActivity === 'function') {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.startStretchActivity();
+    return;
   }
 }, true);
 
@@ -2407,8 +2414,14 @@ const seq=[
 ["Full-body reach",45,"Reach up, stretch tall, then slowly release.","Done"]
 ];
 let elapsed=0,paused=false,timer=null;
-function sheet(){return document.querySelector("[data-activity-sheet],.activity-sheet,.sheet")}
-function close(){if(timer){clearInterval(timer);timer=null}const s=sheet();if(s)s.classList.remove("open")}
+function sheet(){return document.getElementById("breakActivitySheet")}
+function close(){
+ if(timer){clearInterval(timer);timer=null}
+ const s=sheet();
+ if(s)s.classList.remove("show");
+ const root=document.getElementById("breakActivityContent");
+ if(root)root.innerHTML="";
+}
 function fig(){return '<div class="stretch-figure"><svg viewBox="0 0 205 215" aria-hidden="true"><g class="move"><circle class="head" cx="103" cy="38" r="17"/><path class="body" d="M103 58V126M103 76L62 103M103 76L144 103M103 126L75 184M103 126L132 184"/></g></svg></div>'}
 function render(){
  const root=document.getElementById("stretchActivityV1");if(!root)return;
@@ -2422,10 +2435,19 @@ function render(){
  document.getElementById("stretchClose").onclick=close;
 }
 function tick(){if(timer||paused)return;timer=setInterval(function(){elapsed++;render()},1000)}
-window.startStretchActivity=function(){const s=sheet();if(!s)return;s.innerHTML='<div id="stretchActivityV1"></div>';s.classList.add("open");elapsed=0;paused=false;render();tick()}
+window.startStretchActivity=function(){
+ const s=sheet(), root=document.getElementById("breakActivityContent");
+ if(!s||!root)return;
+ root.innerHTML='<div id="stretchActivityV1"></div>';
+ s.classList.add("show");
+ elapsed=0;paused=false;render();tick();
+}
 document.addEventListener("click",function(e){
- const el=e.target.closest('[data-activity="stretch"],[data-break="stretch"]');
- if(!el)return;e.preventDefault();e.stopPropagation();startStretchActivity();
+ const el=e.target.closest('.break-card[data-kind="stretch"],[data-activity="stretch"],[data-break="stretch"]');
+ if(!el)return;
+ e.preventDefault();
+ e.stopImmediatePropagation();
+ startStretchActivity();
 },true);
 })();
 
