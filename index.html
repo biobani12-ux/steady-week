@@ -726,6 +726,26 @@ html body #walkSheet.open > .sheet-card {
 }
 </style>
 
+
+<style id="walk-gif-lightweight">
+html body #walkSheet .walk-visual {
+  height: 210px !important;
+  margin: 12px 0 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+html body #walkSheet .walk-gif {
+  display: block !important;
+  width: min(78vw, 390px) !important;
+  height: 190px !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -837,14 +857,7 @@ html body #walkSheet.open > .sheet-card {
     <div class="walk-subtitle" id="walkSubtitle">10 minutes. No destination required.</div>
 
     <div class="walk-visual" aria-hidden="true">
-      <div class="footprint-path">
-        <span class="footprint left fp1"></span>
-        <span class="footprint right fp2"></span>
-        <span class="footprint left fp3"></span>
-        <span class="footprint right fp4"></span>
-        <span class="footprint left fp5"></span>
-        <span class="footprint right fp6"></span>
-      </div>
+      <img class="walk-gif" src="walking.gif" alt="">
     </div>
 
     <div class="walk-time" id="walkTime">10:00</div>
