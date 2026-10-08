@@ -1752,7 +1752,7 @@ function saveTasks(){
       }
     }
 
-    // Explicit dates.
+    // Explicit dates such as "October 12" or "12 October".
     const monthNames = "january|february|march|april|may|june|july|august|september|october|november|december";
     const explicitDate = clean.match(
       new RegExp("\\b(?:on\\s+)?(\\d{1,2})\\s+(" + monthNames + ")\\b|\\b(?:on\\s+)?(" + monthNames + ")\\s+(\\d{1,2})\\b", "i")
@@ -1771,8 +1771,7 @@ function saveTasks(){
       let year = now.getFullYear();
       let d = new Date(year, month, day, 12,0,0,0);
       if (d < new Date(now.getFullYear(), now.getMonth(), now.getDate())) year++;
-      d = new Date(year, month, day, 12,0,0,0);
-      taskDate = isoDate(d);
+      taskDate = isoDate(new Date(year, month, day, 12,0,0,0));
       clean = clean.replace(explicitDate[0], " ");
     }
 
@@ -1790,13 +1789,13 @@ function saveTasks(){
       }
     }
 
-    // IMPORTANT: capture the time from the original task text before any
-    // cleanup. This keeps "Call mom at 10 AM" tied to 10:00 even when
-    // the task splitter has already separated several spoken tasks.
+    // Time parser. Voice recognition can return "10 AM", "10 a.m.",
+    // "10:30 PM", "at 10", or "10 in the morning".
     const timePatterns = [
-      /\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i,
-      /\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i,
-      /\bat\s+(\d{1,2}):(\d{2})\b/i
+      /\bat\s+(\d{1,2})(?::(\d{2}))?\s*(a\.?\s*m\.?|p\.?\s*m\.?)\b/i,
+      /\b(\d{1,2})(?::(\d{2}))?\s*(a\.?\s*m\.?|p\.?\s*m\.?)\b/i,
+      /\bat\s+(\d{1,2})(?::(\d{2}))?\s*(in\s+the\s+morning|in\s+the\s+afternoon|in\s+the\s+evening|at\s+night)\b/i,
+      /\b(\d{1,2})(?::(\d{2}))?\s*(in\s+the\s+morning|in\s+the\s+afternoon|in\s+the\s+evening|at\s+night)\b/i
     ];
 
     for (const pattern of timePatterns) {
@@ -1804,25 +1803,44 @@ function saveTasks(){
       if (!match) continue;
 
       const hourRaw = Number(match[1]);
-      const minute = match[2] || "00";
-      const meridiem = match[3] ? match[3].toLowerCase() : "";
+      const minute = Number(match[2] || "0");
+      const marker = String(match[3] || "").toLowerCase().replace(/\s+/g,"").replace(/\./g,"");
 
       let hour = hourRaw;
-      if (meridiem === "pm" && hour < 12) hour += 12;
-      if (meridiem === "am" && hour === 12) hour = 0;
+      if (marker === "pm" || marker === "afternoon" || marker === "evening" || marker === "atnight") {
+        if (hour < 12) hour += 12;
+      } else if (marker === "am" || marker === "morning") {
+        if (hour === 12) hour = 0;
+      }
 
-      if (hour >= 0 && hour <= 23 && Number(minute) >= 0 && Number(minute) <= 59) {
-        when = `${String(hour).padStart(2,"0")}:${minute}`;
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+        when = `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`;
         break;
       }
     }
 
-    // Remove the parsed time from the task name.
+    // If recognition says "at 10" with no AM/PM, preserve the spoken clock
+    // time when there is no other time in the task. This defaults to the
+    // user's current daypart rather than throwing the time away.
+    if (!when) {
+      const bareAt = original.match(/\bat\s+(\d{1,2})(?::(\d{2}))?\b/i);
+      if (bareAt) {
+        const h = Number(bareAt[1]);
+        const min = Number(bareAt[2] || 0);
+        if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+          when = `${String(h).padStart(2,"0")}:${String(min).padStart(2,"0")}`;
+        }
+      }
+    }
+
+    // Remove the time phrase from the visible task name.
     if (when) {
       clean = clean
-        .replace(/\bat\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i, " ")
-        .replace(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i, " ")
-        .replace(/\bat\s+\d{1,2}:\d{2}\b/i, " ");
+        .replace(/\bat\s+\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i, " ")
+        .replace(/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i, " ")
+        .replace(/\bat\s+\d{1,2}(?::\d{2})?\s*(?:in\s+the\s+morning|in\s+the\s+afternoon|in\s+the\s+evening|at\s+night)\b/i, " ")
+        .replace(/\b\d{1,2}(?::\d{2})?\s*(?:in\s+the\s+morning|in\s+the\s+afternoon|in\s+the\s+evening|at\s+night)\b/i, " ")
+        .replace(/\bat\s+\d{1,2}(?::\d{2})?\b/i, " ");
     }
 
     clean = clean
@@ -1849,18 +1867,24 @@ function saveTasks(){
   function splitVoiceTasks(text){
     let prepared = String(text || "").trim();
 
-    // Split explicit spoken separators first.
+    // Explicit spoken separators.
     prepared = prepared
       .replace(/\b(?:next\s+task|next)\b/gi, "\n")
       .replace(/\b(?:and\s+then|then)\b/gi, "\n")
       .replace(/[.!?]+/g, "\n")
       .replace(/[,;]+/g, "\n");
 
-    // A very common voice pattern has no punctuation:
+    // Natural speech often has no punctuation:
     // "Call mom at 10 AM Pick up Lily at 12 PM Grocery shopping at 7 PM".
-    // Keep each AM/PM expression with its task, then start the next task.
+    // End a task immediately after a clock expression.
     prepared = prepared.replace(
-      /(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b)(?=\s+\S)/gi,
+      /(\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b)(?=\s+\S)/gi,
+      "$1\n"
+    );
+
+    // Also support "10 in the morning/afternoon/evening".
+    prepared = prepared.replace(
+      /(\b\d{1,2}(?::\d{2})?\s+in\s+the\s+(?:morning|afternoon|evening)|\b\d{1,2}(?::\d{2})?\s+at\s+night)(?=\s+\S)/gi,
       "$1\n"
     );
 
@@ -1882,7 +1906,7 @@ function saveTasks(){
       created.push({
         id: Date.now() + index,
         name,
-        when: parsed.when && /^\d{2}:\d{2}$/.test(parsed.when) ? parsed.when : "",
+        when: parsed.when || "",
         duration: allowed.includes(parsed.duration) ? parsed.duration : 15,
         done:false,
         repeat:$("taskRepeat")?.value || "None",
