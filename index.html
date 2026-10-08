@@ -185,6 +185,117 @@
     max-width:100%;
     box-sizing:border-box;
   }
+
+/* Walking reset */
+.walk-card { text-align: center; }
+.walk-subtitle { color: var(--muted); margin-top: -4px; font-size: 14px; }
+.walk-visual {
+  position: relative;
+  height: 190px;
+  margin: 18px 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.walk-figure {
+  position: relative;
+  width: 72px;
+  height: 120px;
+  transform-origin: 50% 100%;
+  animation: walkBob .72s ease-in-out infinite alternate;
+}
+.walk-head {
+  position: absolute;
+  width: 27px; height: 27px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  left: 23px; top: 0;
+  background: var(--bg);
+}
+.walk-body {
+  position: absolute;
+  width: 7px; height: 53px;
+  background: currentColor;
+  border-radius: 7px;
+  left: 33px; top: 30px;
+  transform: rotate(6deg);
+  transform-origin: 50% 0;
+}
+.walk-arm, .walk-leg {
+  position: absolute;
+  width: 6px;
+  background: currentColor;
+  border-radius: 8px;
+  transform-origin: 50% 0;
+}
+.walk-arm { height: 42px; top: 36px; }
+.walk-arm-left { left: 29px; transform: rotate(32deg); animation: armL .72s ease-in-out infinite alternate; }
+.walk-arm-right { left: 39px; transform: rotate(-32deg); animation: armR .72s ease-in-out infinite alternate; }
+.walk-leg { height: 53px; top: 78px; }
+.walk-leg-left { left: 31px; transform: rotate(26deg); animation: legL .72s ease-in-out infinite alternate; }
+.walk-leg-right { left: 36px; transform: rotate(-25deg); animation: legR .72s ease-in-out infinite alternate; }
+.walk-steps {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  font-size: 30px;
+  color: var(--muted);
+  opacity: .45;
+}
+.walk-steps span:nth-child(1) { transform: translateY(8px); }
+.walk-steps span:nth-child(2) { transform: translateY(0); }
+.walk-steps span:nth-child(3) { transform: translateY(-8px); }
+.walk-time {
+  font-size: clamp(48px, 13vw, 76px);
+  line-height: 1;
+  letter-spacing: -3px;
+  font-variant-numeric: tabular-nums;
+  margin: 8px 0 10px;
+}
+.walk-prompt {
+  min-height: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  transition: opacity .2s ease;
+}
+.walk-progress {
+  height: 5px;
+  border-radius: 10px;
+  background: var(--border);
+  overflow: hidden;
+}
+.walk-progress > div {
+  height: 100%;
+  width: 0;
+  background: currentColor;
+  transition: width .5s linear;
+}
+.walk-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.walk-controls button { flex: 1; }
+.walk-note {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.walk-card.walk-complete .walk-visual { height: 150px; }
+.walk-complete .walk-figure { animation: completeBounce .8s ease-in-out infinite alternate; }
+@keyframes walkBob { from { transform: translateY(2px) rotate(-2deg); } to { transform: translateY(-4px) rotate(2deg); } }
+@keyframes armL { from { transform: rotate(25deg); } to { transform: rotate(-18deg); } }
+@keyframes armR { from { transform: rotate(-25deg); } to { transform: rotate(18deg); } }
+@keyframes legL { from { transform: rotate(28deg); } to { transform: rotate(-20deg); } }
+@keyframes legR { from { transform: rotate(-28deg); } to { transform: rotate(20deg); } }
+@keyframes completeBounce { from { transform: translateY(2px); } to { transform: translateY(-8px); } }
+
 </style>
 </head>
 <body>
@@ -282,6 +393,44 @@
     <button data-screen="calendar"><span class="nav-icon">□</span>Calendar</button>
     <button data-screen="break"><span class="nav-icon">☕</span>Break</button>
   </nav>
+</div>
+
+
+<div class="sheet" id="walkSheet" aria-hidden="true">
+  <div class="sheet-card walk-card">
+    <div class="sheet-head">
+      <div>
+        <div class="eyebrow">RESET</div>
+        <h2>Walk</h2>
+      </div>
+      <button class="icon-btn" id="closeWalk" aria-label="Close walking activity">×</button>
+    </div>
+    <div class="walk-subtitle" id="walkSubtitle">10 minutes. No destination required.</div>
+
+    <div class="walk-visual" aria-hidden="true">
+      <div class="walk-figure" id="walkFigure">
+        <span class="walk-head"></span>
+        <span class="walk-body"></span>
+        <span class="walk-arm walk-arm-left"></span>
+        <span class="walk-arm walk-arm-right"></span>
+        <span class="walk-leg walk-leg-left"></span>
+        <span class="walk-leg walk-leg-right"></span>
+      </div>
+      <div class="walk-steps">
+        <span>·</span><span>·</span><span>·</span>
+      </div>
+    </div>
+
+    <div class="walk-time" id="walkTime">10:00</div>
+    <div class="walk-prompt" id="walkPrompt">Just start walking.</div>
+    <div class="walk-progress"><div id="walkProgress"></div></div>
+
+    <div class="walk-controls">
+      <button class="secondary-btn" id="pauseWalk">Pause</button>
+      <button class="primary-btn" id="endWalk">End walk</button>
+    </div>
+    <div class="walk-note">No steps. No calories. No performance score. Just move for a few minutes.</div>
+  </div>
 </div>
 
 <div class="sheet" id="routineSheet">
@@ -1372,12 +1521,148 @@ function saveTasks(){
 
     // Walking, Lo-fi music and Stretch remain available at all times.
     const label=b.querySelector("b").textContent;
+      if (String(label).toLowerCase().includes('walk') && window.openWalkingReset) {
+        window.openWalkingReset();
+        return;
+      }
+
     showToast(`${label} · ${b.dataset.min} min break started.`);
   });
 
   updateBreakGameAvailability();
   $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();showToast("Completed tasks cleared.");};
 })();
+
+/* Walking reset activity */
+(function initWalkingReset(){
+  const WALK_TOTAL = 10 * 60;
+  let walkRemaining = WALK_TOTAL;
+  let walkTimer = null;
+  let walkRunning = false;
+  let walkStarted = false;
+
+  const sheet = document.getElementById('walkSheet');
+  const timeEl = document.getElementById('walkTime');
+  const promptEl = document.getElementById('walkPrompt');
+  const progressEl = document.getElementById('walkProgress');
+  const pauseBtn = document.getElementById('pauseWalk');
+  const endBtn = document.getElementById('endWalk');
+  const closeBtn = document.getElementById('closeWalk');
+  const card = sheet ? sheet.querySelector('.walk-card') : null;
+
+  if (!sheet || !timeEl || !pauseBtn || !endBtn) return;
+
+  const prompts = [
+    [600, "Just start walking."],
+    [480, "Let your shoulders drop."],
+    [360, "Look around. Notice three things."],
+    [240, "You’re doing a reset, not a workout."],
+    [120, "Keep it easy. Let your mind wander."],
+    [30, "Almost there."]
+  ];
+
+  function fmt(sec){
+    sec = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
+  }
+
+  function setPrompt(){
+    const match = prompts.find(([threshold]) => walkRemaining <= threshold);
+    if (match) promptEl.textContent = match[1];
+  }
+
+  function render(){
+    timeEl.textContent = fmt(walkRemaining);
+    progressEl.style.width = ((WALK_TOTAL - walkRemaining) / WALK_TOTAL * 100) + "%";
+    pauseBtn.textContent = walkRunning ? "Pause" : "Resume";
+    setPrompt();
+  }
+
+  function stopTimer(){
+    if (walkTimer) clearInterval(walkTimer);
+    walkTimer = null;
+    walkRunning = false;
+  }
+
+  function finish(){
+    stopTimer();
+    walkRemaining = 0;
+    card.classList.add('walk-complete');
+    document.getElementById('walkSubtitle').textContent = "Reset complete.";
+    timeEl.textContent = "Done";
+    promptEl.textContent = "10 minutes of movement done. Nice. Back to your day.";
+    progressEl.style.width = "100%";
+    pauseBtn.style.display = "none";
+    endBtn.textContent = "Close";
+    endBtn.classList.remove('primary-btn');
+    endBtn.classList.add('secondary-btn');
+  }
+
+  function tick(){
+    if (!walkRunning) return;
+    walkRemaining -= 1;
+    if (walkRemaining <= 0) {
+      finish();
+      return;
+    }
+    render();
+  }
+
+  function start(){
+    stopTimer();
+    walkRunning = true;
+    walkStarted = true;
+    walkTimer = setInterval(tick, 1000);
+    render();
+  }
+
+  function reset(){
+    stopTimer();
+    walkRemaining = WALK_TOTAL;
+    walkStarted = false;
+    card.classList.remove('walk-complete');
+    document.getElementById('walkSubtitle').textContent = "10 minutes. No destination required.";
+    pauseBtn.style.display = "";
+    endBtn.textContent = "End walk";
+    endBtn.className = "primary-btn";
+    render();
+  }
+
+  function open(){
+    reset();
+    sheet.classList.add('open');
+    sheet.setAttribute('aria-hidden','false');
+    start();
+  }
+
+  function close(){
+    stopTimer();
+    sheet.classList.remove('open');
+    sheet.setAttribute('aria-hidden','true');
+    reset();
+  }
+
+  pauseBtn.addEventListener('click', () => {
+    if (walkRemaining <= 0) return;
+    if (walkRunning) stopTimer();
+    else start();
+    render();
+  });
+
+  endBtn.addEventListener('click', () => {
+    if (walkRemaining <= 0) close();
+    else close();
+  });
+
+  closeBtn.addEventListener('click', close);
+
+  // Expose a tiny internal hook used by the Break-card click patch.
+  window.openWalkingReset = open;
+  render();
+})();
+
 </script>
 </body>
 </html>
