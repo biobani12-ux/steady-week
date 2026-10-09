@@ -2089,7 +2089,31 @@ function saveTasks(){
       recognition=null;
       activeVoiceTarget=null;
       activeVoiceMode="task";
-      if(mode==="task" && text) finishVoiceTaskInput(text);
+      if(mode==="task" && text){
+        finishVoiceTaskInput(text);
+      }else if(mode==="routine" && text){
+        const parsed=parseVoiceTask(text);
+        const name=(parsed.name || text).trim();
+        const duration=Number(parsed.duration) || 15;
+        if(name){
+          const fm=text.match(/\b(daily|every day|weekly|every week|biweekly|every two weeks|monthly|every month)\b/i);
+          let freq="Daily";
+          if(fm){
+            const f=fm[1].toLowerCase();
+            if(f==="weekly" || f==="every week") freq="Weekly";
+            else if(f==="biweekly" || f==="every two weeks") freq="Biweekly";
+            else if(f==="monthly" || f==="every month") freq="Monthly";
+          }
+          routines.push({id:Date.now(),name,icon:"↻",freq,duration,startDate:todayISO()});
+          saveRoutines(); $("routineQuickInput").value=""; renderRoutines(freq); showToast("Routine added.");
+        }
+      }else if(mode==="calendar" && text){
+        $("calTask").value=text;
+        $("calendarQuickInput").value="";
+        $("calDate").value=todayISO();
+        $("calTime").value="";
+        $("calendarSheet").classList.add("show");
+      }
       resetVoiceButton("voiceBtn");
       resetVoiceButton("routineVoiceBtn");
       resetVoiceButton("calendarVoiceBtn");
@@ -2098,8 +2122,9 @@ function saveTasks(){
 
   function startVoice(targetId, mode){
     if(listening && recognition){
-      if(mode==="task") stopVoiceAndFinalize();
-      else stopVoiceInput();
+      // The stop control must finalize every voice mode. Aborting routine or
+      // calendar recognition discards its onend handler and loses the entry.
+      stopVoiceAndFinalize();
       return;
     }
     recognition = setupRecognition(targetId, mode);
