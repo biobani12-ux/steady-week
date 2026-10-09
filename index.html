@@ -1107,6 +1107,15 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
       <option>Biweekly</option><option>Monthly</option><option>Annually</option>
     </select>
 
+    <div id="recurrenceScopeWrap" style="display:none">
+      <label>Apply to</label>
+      <select id="recurrenceScope">
+        <option value="one">This task only</option>
+        <option value="future">This and future tasks</option>
+      </select>
+      <div class="date" style="font-size:14px;margin-top:6px">Choose whether this change affects only this occurrence or the recurring schedule from this date onward.</div>
+    </div>
+
     <div class="modify-actions">
       <button class="primary" id="saveModify">Save changes</button>
       <button class="danger" id="deleteModify">Delete task</button>
@@ -1489,6 +1498,8 @@ function saveTasks(){
   function routineIsDueOn(routine, dateISO){
     const startISO = routine.startDate || dateISO;
     if(dateISO < startISO) return false;
+    if(routine.endDate && dateISO > routine.endDate) return false;
+    if(Array.isArray(routine.skipDates) && routine.skipDates.includes(dateISO)) return false;
     const start = new Date(startISO + "T12:00:00Z");
     const date = new Date(dateISO + "T12:00:00Z");
     const days = Math.floor((date.getTime() - start.getTime()) / 86400000);
@@ -1538,7 +1549,7 @@ function saveTasks(){
       tasks.push({
         id: Date.now() + Math.floor(Math.random() * 100000),
         name: routine.name,
-        when: "",
+        when: routine.when || "",
         duration: Number(routine.duration) || 15,
         done: false,
         repeat: routine.freq,
@@ -1663,100 +1674,172 @@ function saveTasks(){
   }
 
   let modifyingTask = null;
+  let modifyingRoutine = null;
+  let modifyingOriginalRoutineDate = null;
+
+  function getRecurringRoutineForTask(task){
+    if(!task || !task.routineId || !task.routineDate) return null;
+    const routine = routines.find(r => String(r.id) === String(task.routineId));
+    if(!routine || !routineIsDueOn(routine, task.routineDate)) return null;
+    return routine;
+  }
 
   function openModify(t){
     modifyingTask=t;
+    modifyingRoutine=getRecurringRoutineForTask(t);
+    modifyingOriginalRoutineDate=t.routineDate || t.taskDate || todayISO();
     $("modifyName").value=t.name || "";
     $("modifyDate").value=t.taskDate || todayISO();
     $("modifyWhen").value=t.when || "";
     $("modifyDuration").value=String([5,10,15,20,30,45,60,90].includes(Number(t.duration)) ? t.duration : 15);
     const validRepeats = ["Daily", "Weekly", "Biweekly", "Monthly", "Annually"];
-    const linkedRoutine = t.routineId
-      ? routines.find(r => String(r.id) === String(t.routineId))
-      : null;
-    // Some task creation paths or previously saved objects may lack routineId.
-    // Recover the schedule by matching the task name to a routine, but prefer
-    // the task's explicit valid repeat value when duplicate routine names exist.
-    const matchingRoutines = routines.filter(r =>
-      String(r.name || "").trim().toLowerCase() === String(t.name || "").trim().toLowerCase()
-    );
-    const routineFromName = matchingRoutines.find(r => r.freq === t.repeat) || matchingRoutines[0] || null;
-    const inferredRoutine = linkedRoutine || routineFromName;
-    const legacyRepeat = validRepeats.includes(t.repeat) ? t.repeat : "";
-    const repeatValue = inferredRoutine
-      ? inferredRoutine.freq
-      : (legacyRepeat || "Does not repeat");
+    const repeatValue = modifyingRoutine ? modifyingRoutine.freq : (validRepeats.includes(t.repeat) ? t.repeat : "Does not repeat");
     $("modifyRepeat").value = validRepeats.includes(repeatValue) ? repeatValue : "Does not repeat";
-
+    $("recurrenceScopeWrap").style.display = modifyingRoutine ? "block" : "none";
+    $("recurrenceScope").value = "one";
+    $("modifyRepeat").disabled = !!modifyingRoutine;
+    $("recurrenceScope").onchange = ()=>{
+      $("modifyRepeat").disabled = !!modifyingRoutine && $("recurrenceScope").value !== "future";
+      if(modifyingRoutine && $("recurrenceScope").value === "one"){
+        $("modifyRepeat").value = modifyingRoutine.freq;
+      }
+    };
     $("modifySheet").classList.add("show");
   }
 
   function closeModify(){
     modifyingTask=null;
+    modifyingRoutine=null;
+    modifyingOriginalRoutineDate=null;
     $("modifySheet").classList.remove("show");
+  }
+
+  function refreshRoutineViews(){
+    saveRoutines();
+    saveTasks();
+    renderTasks();
+    renderCalendar();
+    if(modifyingRoutine) renderRoutines(modifyingRoutine.freq);
   }
 
   $("saveModify").onclick=()=>{
     if(!modifyingTask) return;
-
+    const task = modifyingTask;
     const name=$("modifyName").value.trim();
     if(!name){
       showToast("Add a task name first.");
       return;
     }
 
-    modifyingTask.name=name;
-    modifyingTask.taskDate=$("modifyDate").value || todayISO();
-    modifyingTask.when=$("modifyWhen").value || "";
-    modifyingTask.duration=Math.max(1,Number($("modifyDuration").value)||15);
-    modifyingTask.repeat=$("modifyRepeat").value;
-    let linkedRoutine = modifyingTask.routineId
-      ? routines.find(r => String(r.id) === String(modifyingTask.routineId))
-      : null;
-    if(!linkedRoutine){
-      linkedRoutine = routines.find(r =>
-        String(r.name || "").trim().toLowerCase() === name.toLowerCase() &&
-        r.freq === $("modifyRepeat").value
-      ) || null;
-      if(linkedRoutine){
-        modifyingTask.routineId = linkedRoutine.id;
-        modifyingTask.routineDate = modifyingTask.taskDate || todayISO();
+    const newDate=$("modifyDate").value || todayISO();
+    const when=$("modifyWhen").value || "";
+    const duration=Math.max(1,Number($("modifyDuration").value)||15);
+    const scope=$("recurrenceScope").value;
+    const routine=modifyingRoutine;
+    const originalRoutineDate=modifyingOriginalRoutineDate || task.taskDate || todayISO();
+
+    if(routine && scope === "future"){
+      // Apply edits to this occurrence and the recurring series from its date onward.
+      const newFrequency=$("modifyRepeat").value;
+      if(newFrequency === "Does not repeat"){
+        showToast("Choose a repeat frequency for future tasks.");
+        return;
       }
-    }
-    if(linkedRoutine){
-      if($("modifyRepeat").value !== "Does not repeat"){
-        linkedRoutine.freq = $("modifyRepeat").value;
-        linkedRoutine.duration = modifyingTask.duration;
-        linkedRoutine.name = name;
-        saveRoutines();
-        modifyingTask.repeat = linkedRoutine.freq;
-      }else{
-        // Choosing "Does not repeat" explicitly detaches this task from the routine.
-        delete modifyingTask.routineId;
-        delete modifyingTask.routineDate;
+      routine.name=name;
+      routine.freq=newFrequency;
+      routine.duration=duration;
+      routine.when=when;
+      routine.startDate=newDate;
+      delete routine.endDate;
+      routine.skipDates=(Array.isArray(routine.skipDates) ? routine.skipDates : []).filter(d=>d < newDate);
+
+      // Keep past occurrences, but remove generated future occurrences so they
+      // can be rebuilt from the updated schedule without stale duplicates.
+      for(let i=tasks.length-1;i>=0;i--){
+        const candidate=tasks[i];
+        if(candidate !== task &&
+           String(candidate.routineId || "") === String(routine.id) &&
+           candidate.routineDate >= originalRoutineDate){
+          tasks.splice(i,1);
+        }
       }
+      task.name=name;
+      task.taskDate=newDate;
+      task.when=when;
+      task.duration=duration;
+      task.repeat=newFrequency;
+      task.routineId=routine.id;
+      task.routineDate=newDate;
+      syncRoutineTasksForDate(newDate);
+      // The sync function sees the current occurrence and won't duplicate it.
+      // Calendar rendering materializes the remaining dates in the visible month.
+    } else {
+      // A one-occurrence edit detaches this task from the series and records an
+      // exception date so the routine does not recreate the original occurrence.
+      if(routine){
+        routine.skipDates=Array.isArray(routine.skipDates) ? routine.skipDates : [];
+        if(!routine.skipDates.includes(originalRoutineDate)) routine.skipDates.push(originalRoutineDate);
+        delete task.routineId;
+        delete task.routineDate;
+      }
+      task.name=name;
+      task.taskDate=newDate;
+      task.when=when;
+      task.duration=duration;
+      task.repeat = routine ? "Does not repeat" : $("modifyRepeat").value;
     }
 
-    delete modifyingTask.steps;
+    delete task.steps;
+    saveRoutines();
     saveTasks();
     closeModify();
     renderTasks();
-    showToast("Task updated");
+    renderCalendar();
+    showToast(scope === "future" && routine ? "This and future tasks updated." : "This task updated.");
   };
 
   $("deleteModify").onclick=()=>{
     if(!modifyingTask) return;
-    const index=tasks.indexOf(modifyingTask);
-    if(index>-1) tasks.splice(index,1);
+    const task=modifyingTask;
+    const routine=modifyingRoutine;
+    const scope=$("recurrenceScope").value;
+    const occurrenceDate=modifyingOriginalRoutineDate || task.routineDate || task.taskDate || todayISO();
+
+    if(routine && scope === "future"){
+      // Stop the series at the selected occurrence, preserving past records.
+      if((routine.startDate || occurrenceDate) >= occurrenceDate){
+        routines=routines.filter(r=>String(r.id)!==String(routine.id));
+      }else{
+        const d=new Date(occurrenceDate+"T12:00:00Z");
+        d.setUTCDate(d.getUTCDate()-1);
+        routine.endDate=d.toISOString().slice(0,10);
+      }
+      for(let i=tasks.length-1;i>=0;i--){
+        const candidate=tasks[i];
+        if(String(candidate.routineId || "") === String(routine.id) &&
+           candidate.routineDate >= occurrenceDate){
+          tasks.splice(i,1);
+        }
+      }
+    }else{
+      if(routine){
+        routine.skipDates=Array.isArray(routine.skipDates) ? routine.skipDates : [];
+        if(!routine.skipDates.includes(occurrenceDate)) routine.skipDates.push(occurrenceDate);
+      }
+      const index=tasks.indexOf(task);
+      if(index>-1) tasks.splice(index,1);
+    }
+
+    saveRoutines();
     saveTasks();
     closeModify();
     renderTasks();
-    showToast("Task deleted");
+    renderCalendar();
+    showToast(scope === "future" && routine ? "This and future tasks deleted." : "This task deleted.");
   };
 
   $("closeModify").onclick=closeModify;
   $("cancelModify").onclick=closeModify;
-
 
   function renderTasks(){
     syncRoutineTasksForDate(todayISO());
