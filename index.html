@@ -1048,6 +1048,27 @@ body[data-theme="dark"] .timeline-hour-label{color:#aaa!important}
 body[data-theme="dark"] .settings-row{border-color:#383a3f!important}
 body[data-theme="dark"] .up-next-card.empty-next{background:#24262a!important}
 
+
+/* v24: complete light/dark palette */
+:root[data-theme="light"],html[data-theme="light"],body[data-theme="light"]{--bg:#f7f7f5;--card:#fff;--ink:#111;--muted:#777;--line:#e5e5e2;--soft:#f0f0ed;--black:#111}
+:root[data-theme="dark"],html[data-theme="dark"],body[data-theme="dark"]{--bg:#111214;--card:#1c1d20;--ink:#f3f3f3;--muted:#aaaeb5;--line:#383a3f;--soft:#24262a;--black:#f3f3f3;color-scheme:dark}
+html[data-theme="dark"],body[data-theme="dark"]{background:#111214!important;color:#f3f3f3!important}
+html[data-theme="light"],body[data-theme="light"]{background:#f7f7f5!important;color:#111!important}
+body[data-theme="dark"] .app,body[data-theme="dark"] .screen,body[data-theme="dark"] .content{background:#111214!important;color:#f3f3f3!important}
+body[data-theme="light"] .app,body[data-theme="light"] .screen,body[data-theme="light"] .content{background:#f7f7f5!important;color:#111!important}
+body[data-theme="dark"] .task,body[data-theme="dark"] .routine-card,body[data-theme="dark"] .progress-card,body[data-theme="dark"] .progress-row,body[data-theme="dark"] .calendar,body[data-theme="dark"] .calendar-day,body[data-theme="dark"] .day-timeline,body[data-theme="dark"] .up-next-card,body[data-theme="dark"] .panel,body[data-theme="dark"] .sheet .panel{background:#1c1d20!important;color:#f3f3f3!important;border-color:#383a3f!important}
+body[data-theme="dark"] .section-title,body[data-theme="dark"] header h1,body[data-theme="dark"] .settings-label b,body[data-theme="dark"] .panel h2{color:#f3f3f3!important}
+body[data-theme="dark"] .task .meta,body[data-theme="dark"] .routine-card .meta,body[data-theme="dark"] .date,body[data-theme="dark"] .settings-label span,body[data-theme="dark"] .timeline-head,body[data-theme="dark"] .up-next-time,body[data-theme="dark"] .empty{color:#aaaeb5!important}
+body[data-theme="dark"] input:not([type="checkbox"]),body[data-theme="dark"] select,body[data-theme="dark"] textarea,body[data-theme="dark"] .task-input,body[data-theme="dark"] .mini-voice-input{background:#24262a!important;color:#f3f3f3!important;border-color:#45474d!important}
+body[data-theme="dark"] nav{background:#17181a!important;border-color:#383a3f!important}
+body[data-theme="dark"] nav button{color:#aaaeb5!important}body[data-theme="dark"] nav button.active{color:#fff!important}
+body[data-theme="dark"] .secondary,body[data-theme="dark"] .cancel-btn,body[data-theme="dark"] .close-sheet{background:#24262a!important;color:#f3f3f3!important;border-color:#45474d!important}
+body[data-theme="dark"] .settings-row{border-color:#383a3f!important}
+body[data-theme="dark"] .timeline-track{background:#292b30!important;border-color:#45474d!important}
+body[data-theme="dark"] .timeline-hour{border-color:#45474d!important}body[data-theme="dark"] .timeline-hour-label{color:#aaaeb5!important}
+body[data-theme="light"] .task,body[data-theme="light"] .routine-card,body[data-theme="light"] .progress-card,body[data-theme="light"] .progress-row,body[data-theme="light"] .calendar,body[data-theme="light"] .calendar-day,body[data-theme="light"] .day-timeline,body[data-theme="light"] .up-next-card,body[data-theme="light"] .panel,body[data-theme="light"] .sheet .panel{background:#fff!important;color:#111!important;border-color:#e5e5e2!important}
+body[data-theme="light"] .task .meta,body[data-theme="light"] .routine-card .meta,body[data-theme="light"] .date,body[data-theme="light"] .settings-label span,body[data-theme="light"] .timeline-head,body[data-theme="light"] .up-next-time,body[data-theme="light"] .empty{color:#777!important}
+
 </style>
 </head>
 <body>
@@ -1584,13 +1605,16 @@ body[data-theme="dark"] .up-next-card.empty-next{background:#24262a!important}
   const THEME_KEY = "steadyWeekTheme_v1";
   function applyTheme(theme){
     const selected = theme === "dark" ? "dark" : "light";
-    document.body.dataset.theme = selected;
-    document.documentElement.dataset.theme = selected;
-    document.body.style.backgroundColor = selected === "dark" ? "#111214" : "#f7f7f5";
-    document.body.style.color = selected === "dark" ? "#f3f3f3" : "#111111";
-    document.documentElement.style.backgroundColor = selected === "dark" ? "#111214" : "#f7f7f5";
-    document.documentElement.style.colorScheme = selected;
-    const toggle = $("themeToggle");
+    document.documentElement.setAttribute("data-theme", selected);
+    document.body.setAttribute("data-theme", selected);
+    document.documentElement.style.setProperty("color-scheme", selected);
+    const bg = selected === "dark" ? "#111214" : "#f7f7f5";
+    const fg = selected === "dark" ? "#f3f3f3" : "#111111";
+    document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
+    document.documentElement.style.color = fg;
+    document.body.style.color = fg;
+    const toggle = document.getElementById("themeToggle");
     if(toggle) toggle.checked = selected === "dark";
     try { localStorage.setItem(THEME_KEY, selected); } catch(e) {}
   }
@@ -1598,21 +1622,8 @@ body[data-theme="dark"] .up-next-card.empty-next{background:#24262a!important}
     let saved = "light";
     try { saved = localStorage.getItem(THEME_KEY) || "light"; } catch(e) {}
     applyTheme(saved);
-    // Use delegated events so the switch keeps working if the settings sheet is
-    // rendered or touched through its label/slider on mobile Safari.
-    document.addEventListener("change", e => {
-      if(e.target && e.target.id === "themeToggle"){
-        applyTheme(e.target.checked ? "dark" : "light");
-      }
-    });
-    document.addEventListener("click", e => {
-      const toggle = e.target && e.target.closest ? e.target.closest("#themeToggle, .theme-switch .theme-slider") : null;
-      if(!toggle) return;
-      const input = $("themeToggle");
-      if(!input) return;
-      // The native label/input interaction updates checked; defer reading it
-      // until the browser completes the click's default action.
-      setTimeout(() => applyTheme(input.checked ? "dark" : "light"), 0);
+    document.addEventListener("change", function(e){
+      if(e.target && e.target.id === "themeToggle") applyTheme(e.target.checked ? "dark" : "light");
     }, true);
   }
 
