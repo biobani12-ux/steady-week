@@ -1924,10 +1924,19 @@ function saveTasks(){
 
   function finishVoiceTaskInput(text){
     const clean = String(text || "").trim();
-    if(!clean) return;
+    if(!clean) return 0;
     const count = createTasksFromVoice(clean);
-    if(count === 1) showToast("Task added.");
-    else if(count > 1) showToast(`${count} tasks added.`);
+    if(count > 0){
+      // Clear Quick Add only after at least one task was successfully created,
+      // so the field is ready for the next voice command.
+      const quickInput = $("quickInput");
+      if(quickInput) quickInput.value = "";
+      if(count === 1) showToast("Task added.");
+      else showToast(`${count} tasks added.`);
+    }else{
+      showToast("I couldn't find a task in that voice input. Try again.");
+    }
+    return count;
   }
 
   function fillTaskFormFromText(text){
