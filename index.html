@@ -2129,6 +2129,46 @@ function saveTasks(){
   $("closeModify").onclick=closeModify;
   $("cancelModify").onclick=closeModify;
 
+  // Gentle two-note completion reward. Generated locally; no audio asset or network request.
+  let completionAudioContext = null;
+  function prepareCompletionAudio(){
+    try{
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if(!AudioContextClass) return null;
+      if(!completionAudioContext) completionAudioContext = new AudioContextClass();
+      if(completionAudioContext.state === "suspended") completionAudioContext.resume().catch(()=>{});
+      return completionAudioContext;
+    }catch(e){ return null; }
+  }
+  function playCompletionSound(){
+    try{
+      const ctx = prepareCompletionAudio();
+      if(!ctx) return;
+      const now = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.055, now + 0.025);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
+      master.connect(ctx.destination);
+      [[659.25, 0.00, 0.28], [783.99, 0.13, 0.42]].forEach(([frequency, offset, length])=>{
+        const oscillator = ctx.createOscillator();
+        const envelope = ctx.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, now + offset);
+        envelope.gain.setValueAtTime(0.0001, now + offset);
+        envelope.gain.exponentialRampToValueAtTime(0.72, now + offset + 0.018);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, now + offset + length);
+        oscillator.connect(envelope);
+        envelope.connect(master);
+        oscillator.start(now + offset);
+        oscillator.stop(now + offset + length + 0.02);
+      });
+      setTimeout(()=>{ try{master.disconnect()}catch(e){} }, 900);
+    }catch(e){
+      // Audio is optional: task completion must still work if audio is unavailable.
+    }
+  }
+
   function renderTasks(){
     syncRoutineTasksForDate(todayISO());
     rollPendingTasksForward();
@@ -2144,13 +2184,16 @@ function saveTasks(){
       el.className="task"+(t.done?" done":"");
       el.innerHTML=`<button class="check" aria-label="Complete"></button><div class="task-main"><div class="name">${escapeHtml(t.name)}</div><div class="meta">${formatTaskDate(t.taskDate)}${t.when?" · "+formatTime(t.when):" · Any time"} · ${t.duration} min</div></div><button class="modify-btn">Modify</button><button class="timer-btn">Timer</button>`;
       el.querySelector(".check").addEventListener("click",()=>{
-        t.done=!t.done; saveTasks(); recordProgressForDate(today); renderTasks(); updateBreakGameAvailability();
+        const completing = !t.done;
+        t.done=!t.done;
+        if(completing) playCompletionSound();
+        saveTasks(); recordProgressForDate(today); renderTasks(); updateBreakGameAvailability();
         if(todayTasksAreComplete()){
           recordProgressForDate(today);
           setTimeout(()=>showScreen("progress"),180);
         }
       });
-      el.querySelector(".timer-btn").addEventListener("click",()=>openFocus(t));
+      el.querySelector(".timer-btn").addEventListener("click",()=>{prepareCompletionAudio();openFocus(t)});
       el.querySelector(".modify-btn").addEventListener("click",()=>openModify(t));
       box.appendChild(el);
     });
@@ -2720,7 +2763,9 @@ function saveTasks(){
   function completeFocus(){
     if(timer){clearInterval(timer);timer=null}
     if(focusTask){
+      const wasIncomplete = !focusTask.done;
       focusTask.done=true;
+      if(wasIncomplete) playCompletionSound();
       saveTasks();
       renderTasks();
     }
@@ -2758,7 +2803,13 @@ function saveTasks(){
   $("minus").onclick=()=>{remaining=Math.max(60,remaining-300);updateTimer()};
   $("plus").onclick=()=>{remaining+=300;total=Math.max(total,remaining);updateTimer()};
   function completeFocus(){
-    if(focusTask){focusTask.done=true;saveTasks();renderTasks();}
+    if(focusTask){
+      const wasIncomplete = !focusTask.done;
+      focusTask.done=true;
+      if(wasIncomplete) playCompletionSound();
+      saveTasks();
+      renderTasks();
+    }
     focusTask=null;
     pausedFocus=null;
     try{localStorage.removeItem("adhdAppPausedFocus_v1");}catch(e){}
