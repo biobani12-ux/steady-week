@@ -1360,6 +1360,13 @@ body[data-theme="light"] #events .event .meta{
       </label>
     </div>
     <div class="settings-row">
+      <div class="settings-label"><b>Sound effects</b><span>Soft sounds for navigation, starting timers, breaks, and completing tasks. Saved on this device.</span></div>
+      <label class="theme-switch" aria-label="Sound effects">
+        <input type="checkbox" id="soundEffectsToggle" role="switch" aria-label="Enable sound effects" checked>
+        <span class="theme-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
       <div class="settings-label"><b>Google backup</b><span>Keep a copy of your Steady Week data in your Google account.</span></div>
       <button class="secondary" id="openBackup">Manage</button>
     </div>
@@ -1897,7 +1904,7 @@ function saveTasks(){
       $("breakSubtitle").textContent=completedToday?"You finished today’s tasks. Choose your reset.":"Rest is part of the plan.";
     }
   }
-  document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
+  document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{playUISound("navigation");showScreen(b.dataset.screen)}));
 
   function taskMinutes(t){ if(!t.when) return 24*60+1; const p=t.when.split(":"); return Number(p[0])*60+Number(p[1]); }
   function taskDateTimeKey(t){ return `${t.taskDate || todayISO()} ${t.when || "23:59"}`; }
@@ -2129,7 +2136,12 @@ function saveTasks(){
   $("closeModify").onclick=closeModify;
   $("cancelModify").onclick=closeModify;
 
-  // Gentle two-note completion reward. Generated locally; no audio asset or network request.
+  // Centralized sound-effects controller. Sounds are synthesized locally.
+  const SOUND_EFFECTS_KEY = "steadyWeekSoundEffects_v1";
+  function soundEffectsEnabled(){
+    try { return localStorage.getItem(SOUND_EFFECTS_KEY) !== "off"; }
+    catch(e) { return true; }
+  }
   let completionAudioContext = null;
   function prepareCompletionAudio(){
     try{
@@ -2141,6 +2153,7 @@ function saveTasks(){
     }catch(e){ return null; }
   }
   function playCompletionSound(){
+    if(!soundEffectsEnabled()) return;
     try{
       const ctx = prepareCompletionAudio();
       if(!ctx) return;
@@ -2168,6 +2181,46 @@ function saveTasks(){
       // Audio is optional: task completion must still work if audio is unavailable.
     }
   }
+  function playUISound(kind){
+    if(!soundEffectsEnabled()) return;
+    try{
+      const ctx = prepareCompletionAudio();
+      if(!ctx) return;
+      const now = ctx.currentTime;
+      const presets = {
+        navigation: [{f:520, t:0, d:0.055, v:0.12, wave:"triangle"}],
+        break: [{f:587.33, t:0, d:0.16, v:0.15, wave:"sine"}, {f:783.99, t:0.075, d:0.24, v:0.12, wave:"sine"}],
+        start: [{f:493.88, t:0, d:0.065, v:0.12, wave:"sine"}, {f:659.25, t:0.055, d:0.085, v:0.10, wave:"sine"}],
+        close: [{f:392, t:0, d:0.07, v:0.085, wave:"triangle"}]
+      };
+      (presets[kind] || presets.navigation).forEach(tone=>{
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.type=tone.wave;
+        osc.frequency.setValueAtTime(tone.f, now+tone.t);
+        gain.gain.setValueAtTime(0.0001, now+tone.t);
+        gain.gain.exponentialRampToValueAtTime(tone.v, now+tone.t+0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now+tone.t+tone.d);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now+tone.t); osc.stop(now+tone.t+tone.d+0.015);
+      });
+    }catch(e){
+      // UI sounds are optional and must never block app interactions.
+    }
+  }
+  // Persist the master switch; default is enabled.
+  const soundEffectsToggle = $("soundEffectsToggle");
+  if(soundEffectsToggle){
+    soundEffectsToggle.checked = soundEffectsEnabled();
+    soundEffectsToggle.addEventListener("change",()=>{
+      try{localStorage.setItem(SOUND_EFFECTS_KEY,soundEffectsToggle.checked?"on":"off")}catch(e){}
+      if(soundEffectsToggle.checked) playUISound("navigation");
+    });
+  }
+  // Closing or cancelling a sheet gets a quiet low tick. Do not sound on typing or scrolling.
+  document.addEventListener("click",event=>{
+    const target=event.target && event.target.closest ? event.target.closest("#closeSettings,#closeBackup,#closeModify,#cancelModify,#closeFocus,#closeWalk,#cancelTask,.close-sheet,[data-sound='close']") : null;
+    if(target) playUISound("close");
+  },true);
 
   function renderTasks(){
     syncRoutineTasksForDate(todayISO());
@@ -2776,6 +2829,7 @@ function saveTasks(){
 
   function startFocusTimer(){
     if(timer || !focusTask || focusTask.done) return;
+    playUISound("start");
     $("pause").textContent="Ⅱ";
     timer=setInterval(()=>{
       remaining--;
@@ -3516,6 +3570,7 @@ function saveTasks(){
       return;
     }
 
+    playUISound("break");
     if(kind==="wordle"){startWordle();return;}
     if(kind==="doodle"){startDoodle();return;}
     if(kind==="breathing"){startBreathing();return;}
