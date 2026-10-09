@@ -1095,6 +1095,29 @@ body[data-theme="light"] #events .event .meta{
 }
 
 </style>
+
+<style>
+.break-section-title{font-size:19px;margin:8px 0 12px;font-weight:800}
+.break-section-title.relax-heading{margin-top:26px}
+.arcade-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:stretch;justify-content:center;background:#101113;color:#f7f7f7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);overflow:auto}
+.arcade-overlay.show{display:flex}
+.arcade-panel{width:100%;max-width:520px;min-height:100%;box-sizing:border-box;padding:calc(18px + env(safe-area-inset-top)) 18px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;background:var(--card,#1c1d20);color:var(--text,#f7f7f7)}
+.arcade-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.arcade-header h2{margin:3px 0 0;font-size:30px}
+.arcade-eyebrow{font-size:10px;letter-spacing:.13em;color:var(--muted,#999);font-weight:800}
+.arcade-close{border:0;border-radius:50%;width:44px;height:44px;font-size:28px;background:var(--soft,#2b2c30);color:var(--text,#f7f7f7)}
+.arcade-instructions{margin:0;color:var(--muted,#aaa);font-size:14px}
+.arcade-stats{display:flex;justify-content:space-between;font-size:13px;font-weight:700}
+#arcadeCanvas{display:block;width:min(100%,420px);height:auto;max-height:50vh;aspect-ratio:1;align-self:center;border-radius:14px;background:#05070d;touch-action:none;border:1px solid var(--line,#3a3b40)}
+.arcade-controls{display:none;align-items:center;flex-direction:column;gap:7px}
+.arcade-controls>div{display:flex;gap:7px}
+.arcade-controls button{width:54px;height:46px;border:1px solid var(--line,#45464b);border-radius:12px;background:var(--soft,#292a2e);color:var(--text,#f7f7f7);font-size:22px;touch-action:manipulation}
+.arcade-footer{display:flex;gap:10px}
+.arcade-footer button{flex:1;padding:13px;border-radius:12px}
+.arcade-hint{font-size:11px;color:var(--muted,#999);text-align:center;margin:0}
+@media(min-width:700px){.arcade-overlay{align-items:center}.arcade-panel{min-height:0;height:min(94dvh,900px);border-radius:24px;overflow:auto}.arcade-controls button{width:58px}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1174,10 +1197,16 @@ body[data-theme="light"] #events .event .meta{
     <header><div><h1>Take a break</h1><div class="date" id="breakSubtitle">Rest is part of the plan.</div></div></header>
     <div class="content">
       <div class="break-return waiting" id="breakReturn"><b id="breakReturnTitle">No paused timer</b><span id="breakReturnText">Start a task timer, then use “Take a break” to pause it here.</span><button class="primary" id="returnToFocus" style="margin-top:12px">Return to timer</button></div>
+      <h2 class="break-section-title">Games</h2>
       <div class="break-grid">
         <button class="break-card" data-kind="wordle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="4"/><rect x="10" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="17" y="10" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><rect x="10" y="17" width="4" height="4"/><rect x="17" y="17" width="4" height="4"/></svg></div><b>Wordle</b><span>5 min</span></button>
-        <button class="break-card" data-kind="walk" data-min="10"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M13 4.5a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z"/><path d="m10 7 2 4 3 2"/><path d="m10 9-3 4-2 4"/><path d="m12 11-1 5 3 4"/><path d="m8 13 4 1"/></svg></div><b>Walk</b><span>10 min</span></button>
+        <button class="break-card" data-kind="pacman" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M12 12 21 6a10 10 0 1 0 0 12Z"/><circle cx="15" cy="8" r="1" fill="currentColor"/></svg></div><b>Pac-Man</b><span>5 min</span></button>
+        <button class="break-card" data-kind="snake" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M4 6h7a3 3 0 0 1 3 3v6a3 3 0 0 0 3 3h3"/><circle cx="19" cy="18" r="1"/><circle cx="4" cy="6" r="1"/></svg></div><b>Snake</b><span>5 min</span></button>
         <button class="break-card" data-kind="doodle" data-min="5" data-requires-complete="true" aria-disabled="false"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M4 17.5 15.5 6l2.5 2.5L6.5 20H4v-2.5Z"/><path d="m14 7.5 2.5 2.5"/><path d="M18 4.5h.01M20 7h.01"/></svg></div><b>Doodle</b><span>5 min</span></button>
+      </div>
+      <h2 class="break-section-title relax-heading">Relax and regulate</h2>
+      <div class="break-grid">
+        <button class="break-card" data-kind="walk" data-min="10"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M13 4.5a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z"/><path d="m10 7 2 4 3 2"/><path d="m10 9-3 4-2 4"/><path d="m12 11-1 5 3 4"/><path d="m8 13 4 1"/></svg></div><b>Walk</b><span>10 min</span></button>
         <button class="break-card" data-kind="lofi" data-min="15"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M8 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div><b>Lo-fi music</b><span>15 min</span></button>
         <button class="break-card" data-kind="breathing" data-min="3"><div class="break-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M20 12h-4M12 20v-4M4 12h4"/></svg></div><b>Breathing</b><span>3 min</span></button>
         <button class="break-card" data-kind="stretch" data-min="5"><div class="break-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg></div><b>Stretch</b><span>5 min</span></button>
@@ -1194,6 +1223,22 @@ body[data-theme="light"] #events .event .meta{
     <div style="text-align:center;font-size:11px;color:#777;margin-bottom:12px">GREEN = right place · YELLOW = wrong place · GREY = not in word</div>
     <div class="wordle-keyboard" id="wordleKeyboard"></div>
     <button class="primary wordle-new" id="newWordle">New word</button>
+  </div>
+</div>
+
+
+<div class="arcade-overlay" id="arcadeOverlay" aria-hidden="true">
+  <div class="arcade-panel">
+    <div class="arcade-header"><div><div class="arcade-eyebrow">5-MINUTE GAME BREAK</div><h2 id="arcadeTitle">Arcade</h2></div><button id="closeArcade" class="arcade-close" aria-label="Close game">×</button></div>
+    <p class="arcade-instructions" id="arcadeInstructions">Use the controls to play.</p>
+    <div class="arcade-stats"><span id="arcadeScore">Score: 0</span><span id="arcadeStatus">Ready</span></div>
+    <canvas id="arcadeCanvas" width="420" height="420" aria-label="Game board"></canvas>
+    <div class="arcade-controls" id="snakeControls">
+      <button data-dir="up" aria-label="Up">↑</button>
+      <div><button data-dir="left" aria-label="Left">←</button><button data-dir="down" aria-label="Down">↓</button><button data-dir="right" aria-label="Right">→</button></div>
+    </div>
+    <div class="arcade-footer"><button id="restartArcade" class="secondary">Restart</button><button id="pauseArcade" class="primary">Pause</button></div>
+    <p class="arcade-hint">Swipe on the board or use the controls. Close any time to return to Break.</p>
   </div>
 </div>
 
@@ -3880,6 +3925,120 @@ document.addEventListener("click",function(e){
   } else {
     init();
   }
+})();
+</script>
+
+
+<script>
+/* Local, touch-friendly Pac-Man and Snake mini-games. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const overlay=$("arcadeOverlay"), canvas=$("arcadeCanvas"), ctx=canvas.getContext("2d");
+  const title=$("arcadeTitle"), instructions=$("arcadeInstructions"), scoreEl=$("arcadeScore"), statusEl=$("arcadeStatus"), snakeControls=$("snakeControls");
+  let game="", loop=null, paused=false, over=false, score=0, lastTick=0, snake=[], food={x:8,y:8}, dir={x:1,y:0}, nextDir={x:1,y:0}, pac={x:1,y:1}, ghosts=[], dots=new Set(), maze=[], touchStart=null;
+  const SIZE=21, CELL=20;
+  const mazeRows=[
+    "#####################",
+    "#.........#.........#",
+    "#.###.###.#.###.###.#",
+    "#o#.....#...#.....#o#",
+    "#.#.###.#####.###.#.#",
+    "#.....#...#...#.....#",
+    "#####.###.#.###.#####",
+    "#......... ........#".replace(" ","."),
+    "###.#.#########.#.###",
+    "#...#....#....#...#..#",
+    "#.#####..#..#####.#..#",
+    "#........P...........#",
+    "###.#.###.#.###.#.###",
+    "#...#.....#.....#...#",
+    "#.#####.#####.#####.#",
+    "#o....#...#...#....o#",
+    "###.#.###.#.###.#.###",
+    "#...#.........#...#..#",
+    "#.###.###.#.###.###.#",
+    "#.........#.........#",
+    "#####################"
+  ];
+  // Normalize row lengths and construct walkable maze cells.
+  function makeMaze(){
+    maze=mazeRows.map(r=>(r+"#####################").slice(0,SIZE).split(""));
+    dots=new Set(); ghosts=[{x:9,y:10},{x:11,y:10},{x:10,y:9}];
+    for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)if(maze[y][x]==="."||maze[y][x]==="o"||maze[y][x]==="P"){
+      if(maze[y][x]==="."||maze[y][x]==="o")dots.add(`${x},${y}`);
+      if(maze[y][x]==="P")pac={x,y};
+    }
+    if(!pac || !Number.isFinite(pac.x))pac={x:1,y:1};
+  }
+  function wall(x,y){return y<0||y>=SIZE||x<0||x>=SIZE||maze[y]?.[x]==="#";}
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(game==="snake"){drawSnake();return;}
+    const cell=canvas.width/SIZE;
+    for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
+      if(maze[y][x]==="#"){ctx.fillStyle="#182c78";ctx.fillRect(x*cell+1,y*cell+1,cell-2,cell-2);}
+      else if(dots.has(`${x},${y}`)){ctx.fillStyle=maze[y][x]==="o"?"#fff0a6":"#d8d9e8";ctx.beginPath();ctx.arc((x+.5)*cell,(y+.5)*cell,maze[y][x]==="o"?cell*.19:cell*.07,0,Math.PI*2);ctx.fill();}
+    }
+    ctx.fillStyle="#ffd83d";ctx.beginPath();ctx.arc((pac.x+.5)*cell,(pac.y+.5)*cell,cell*.42,.25,Math.PI*1.75);ctx.lineTo((pac.x+.5)*cell,(pac.y+.5)*cell);ctx.fill();
+    ["#ff5364","#ff9bd1","#55d8ff"].forEach((c,i)=>{const g=ghosts[i];ctx.fillStyle=c;ctx.beginPath();ctx.arc((g.x+.5)*cell,(g.y+.5)*cell,cell*.36,Math.PI,0);ctx.lineTo((g.x+.86)*cell,(g.y+.85)*cell);ctx.lineTo((g.x+.68)*cell,(g.y+.75)*cell);ctx.lineTo((g.x+.5)*cell,(g.y+.85)*cell);ctx.lineTo((g.x+.32)*cell,(g.y+.75)*cell);ctx.lineTo((g.x+.14)*cell,(g.y+.85)*cell);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc((g.x+.38)*cell,(g.y+.48)*cell,cell*.1,0,7);ctx.arc((g.x+.62)*cell,(g.y+.48)*cell,cell*.1,0,7);ctx.fill();});
+  }
+  function drawSnake(){
+    const cell=canvas.width/SIZE;ctx.fillStyle="#0b0e12";ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle="#171d22";ctx.lineWidth=.5;
+    for(let i=0;i<=SIZE;i++){ctx.beginPath();ctx.moveTo(i*cell,0);ctx.lineTo(i*cell,canvas.height);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*cell);ctx.lineTo(canvas.width,i*cell);ctx.stroke();}
+    ctx.fillStyle="#ff7b71";ctx.beginPath();ctx.arc((food.x+.5)*cell,(food.y+.5)*cell,cell*.34,0,Math.PI*2);ctx.fill();
+    snake.forEach((p,i)=>{ctx.fillStyle=i===0?"#c4f36b":"#79b84d";ctx.beginPath();ctx.roundRect(p.x*cell+1,p.y*cell+1,cell-2,cell-2,5);ctx.fill();});
+  }
+  function updateStats(){scoreEl.textContent="Score: "+score;statusEl.textContent=over?(game==="pacman"&&dots.size===0?"Maze cleared!":"Game over"):(paused?"Paused":"Playing");}
+  function tickSnake(){
+    dir=nextDir;const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    if(head.x<0||head.y<0||head.x>=SIZE||head.y>=SIZE||snake.some((p,i)=>i<snake.length-1&&p.x===head.x&&p.y===head.y)){endGame();return;}
+    snake.unshift(head);
+    if(head.x===food.x&&head.y===food.y){score+=10;placeFood();}else snake.pop();
+    updateStats();draw();
+  }
+  function placeFood(){let tries=0;do{food={x:Math.floor(Math.random()*SIZE),y:Math.floor(Math.random()*SIZE)};tries++;}while(snake.some(p=>p.x===food.x&&p.y===food.y)&&tries<500);}
+  function tickPac(){
+    if(!wall(pac.x+dir.x,pac.y+dir.y)){pac.x+=dir.x;pac.y+=dir.y;}
+    const key=`${pac.x},${pac.y}`;if(dots.has(key)){dots.delete(key);score+=maze[pac.y][pac.x]==="o"?50:10;}
+    ghosts.forEach(g=>{
+      const opts=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}].filter(d=>!wall(g.x+d.x,g.y+d.y));
+      if(opts.length){opts.sort((a,b)=>Math.abs(g.x+a.x-pac.x)+Math.abs(g.y+a.y-pac.y)-(Math.abs(g.x+b.x-pac.x)+Math.abs(g.y+b.y-pac.y)));const pick=Math.random()<.58?opts[0]:opts[Math.floor(Math.random()*opts.length)];g.x+=pick.x;g.y+=pick.y;}
+      if(g.x===pac.x&&g.y===pac.y){endGame();}
+    });
+    if(!dots.size){over=true;stopLoop();}
+    updateStats();draw();
+  }
+  function stopLoop(){if(loop){clearInterval(loop);loop=null;}}
+  function startLoop(){stopLoop();lastTick=0;loop=setInterval(()=>{if(paused||over)return;game==="snake"?tickSnake():tickPac();},game==="snake"?145:210);}
+  function endGame(){over=true;stopLoop();updateStats();draw();}
+  function start(kind){
+    game=kind;paused=false;over=false;score=0;dir={x:1,y:0};nextDir={x:1,y:0};
+    if(kind==="snake"){title.textContent="Snake";instructions.textContent="Eat the red food. Swipe or use the arrows. Don't hit the walls or yourself.";snake=[{x:5,y:10},{x:4,y:10},{x:3,y:10}];placeFood();snakeControls.style.display="flex";}
+    else{title.textContent="Pac-Man";instructions.textContent="Collect the dots and avoid the ghosts. Swipe on the maze to change direction.";makeMaze();snakeControls.style.display="none";}
+    $("pauseArcade").textContent="Pause";overlay.classList.add("show");overlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";updateStats();draw();startLoop();
+  }
+  function close(){stopLoop();overlay.classList.remove("show");overlay.setAttribute("aria-hidden","true");document.body.style.overflow="";}
+  function setDirection(d){
+    const dirs={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};const v=dirs[d];if(!v)return;
+    if(game==="snake"&&v.x===-dir.x&&v.y===-dir.y)return;
+    nextDir=v; if(game==="pacman")dir=v;
+  }
+  document.addEventListener("click",e=>{
+    const card=e.target.closest('.break-card[data-kind="pacman"],.break-card[data-kind="snake"]');if(!card)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    const kind=card.dataset.kind;
+    if(card.classList.contains("locked")){return;}
+    if(typeof window.playUISound==="function")window.playUISound("break");
+    start(kind);
+  },true);
+  $("closeArcade").addEventListener("click",close);
+  $("restartArcade").addEventListener("click",()=>start(game));
+  $("pauseArcade").addEventListener("click",()=>{paused=!paused;$("pauseArcade").textContent=paused?"Resume":"Pause";updateStats();});
+  snakeControls.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setDirection(b.dataset.dir)));
+  document.addEventListener("keydown",e=>{if(!overlay.classList.contains("show"))return;const map={ArrowUp:"up",w:"up",ArrowDown:"down",s:"down",ArrowLeft:"left",a:"left",ArrowRight:"right",d:"right"};if(map[e.key]){e.preventDefault();setDirection(map[e.key]);}if(e.key==="Escape")close();if(e.key===" "){e.preventDefault();paused=!paused;$("pauseArcade").textContent=paused?"Resume":"Pause";updateStats();}});
+  canvas.addEventListener("touchstart",e=>{const t=e.changedTouches[0];touchStart={x:t.clientX,y:t.clientY};},{passive:true});
+  canvas.addEventListener("touchend",e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>18)setDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"));touchStart=null;},{passive:true});
 })();
 </script>
 
