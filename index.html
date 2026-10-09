@@ -2030,14 +2030,28 @@ function saveTasks(){
       if(finishedMode==="task"){
         if(capturedText) finishVoiceTaskInput(capturedText);
       }else if(finishedMode==="routine"){
-        const text=$(finishedTarget)?.value.trim();
+        const text=String(capturedText || $(finishedTarget)?.value || "").trim();
         if(text){
-          $("routineName").value=text;
-          $("routineQuickInput").value="";
-          $("routineDuration").value="15";
-          $("routineFreq").value="Daily";
-          $("routineStart").value=todayISO();
-          $("routineSheet").classList.add("show");
+          // Routine voice input should commit the routine, not merely open a
+          // form and leave the user to finish the job manually.
+          const parsed=parseVoiceTask(text);
+          const name=(parsed.name || text).trim();
+          const duration=Number(parsed.duration) || 15;
+          if(name){
+            const frequencyMatch=text.match(/\\b(daily|every day|weekly|every week|biweekly|every two weeks|monthly|every month)\\b/i);
+            let freq="Daily";
+            if(frequencyMatch){
+              const f=frequencyMatch[1].toLowerCase();
+              if(f==="weekly" || f==="every week") freq="Weekly";
+              else if(f==="biweekly" || f==="every two weeks") freq="Biweekly";
+              else if(f==="monthly" || f==="every month") freq="Monthly";
+            }
+            routines.push({id:Date.now(),name,icon:"↻",freq,duration,startDate:todayISO()});
+            saveRoutines();
+            $("routineQuickInput").value="";
+            renderRoutines(freq);
+            showToast("Routine added.");
+          }
         }
       }else if(finishedMode==="calendar"){
         const text=$(finishedTarget)?.value.trim();
