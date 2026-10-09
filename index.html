@@ -1947,6 +1947,73 @@ function saveTasks(){
     openSheet();
   }
 
+  function commitVoiceResult(mode, targetId, rawText){
+    const text = String(rawText || $(targetId)?.value || "").trim();
+    if(!text) return false;
+
+    if(mode === "task"){
+      finishVoiceTaskInput(text);
+      return true;
+    }
+
+    if(mode === "routine"){
+      const parsed = parseVoiceTask(text);
+      let name = String(parsed.name || text).trim();
+      // Recurrence words describe the schedule, not the routine's title.
+      name = name
+        .replace(/\b(?:every\s+day|daily|every\s+week|weekly|every\s+two\s+weeks|biweekly|every\s+month|monthly)\b/ig, " ")
+        .replace(/\s+/g, " ")
+        .replace(/[\s,.;:]+$/g, "")
+        .trim();
+
+      const frequencyMatch = text.match(/\b(daily|every\s+day|weekly|every\s+week|biweekly|every\s+two\s+weeks|monthly|every\s+month)\b/i);
+      let freq = "Daily";
+      if(frequencyMatch){
+        const f = frequencyMatch[1].toLowerCase().replace(/\s+/g, " ");
+        if(f === "weekly" || f === "every week") freq = "Weekly";
+        else if(f === "biweekly" || f === "every two weeks") freq = "Biweekly";
+        else if(f === "monthly" || f === "every month") freq = "Monthly";
+      }
+      if(!name){
+        showToast("I heard the schedule, but not the routine name. Try again.");
+        return false;
+      }
+      // Prevent duplicate creation if the browser fires both an error and end event.
+      const duplicate = routines.some(r =>
+        String(r.name || "").toLowerCase() === name.toLowerCase() &&
+        r.freq === freq &&
+        Number(r.duration) === (Number(parsed.duration) || 15) &&
+        r._voiceCreatedAt && Date.now() - r._voiceCreatedAt < 3000
+      );
+      if(duplicate) return true;
+
+      routines.push({
+        id: Date.now(),
+        name,
+        icon: "↻",
+        freq,
+        duration: Number(parsed.duration) || 15,
+        startDate: todayISO(),
+        _voiceCreatedAt: Date.now()
+      });
+      saveRoutines();
+      $("routineQuickInput").value = "";
+      renderRoutines(freq);
+      showToast("Routine added.");
+      return true;
+    }
+
+    if(mode === "calendar"){
+      $("calTask").value = text;
+      $("calendarQuickInput").value = "";
+      $("calDate").value = todayISO();
+      $("calTime").value = "";
+      $("calendarSheet").classList.add("show");
+      return true;
+    }
+    return false;
+  }
+
   function setupRecognition(targetId, mode="task"){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SpeechRecognition){
@@ -1957,6 +2024,9 @@ function saveTasks(){
     r.lang = "en-IN";
     r.interimResults = true;
     r.continuous = true;
+    r._voiceMode = mode;
+    r._voiceTargetId = targetId;
+    r._voiceCommitted = false;
     activeVoiceTarget = targetId;
     activeVoiceMode = mode;
     ignoreRecognitionEnd = false;
@@ -1974,9 +2044,6 @@ function saveTasks(){
       showToast("Listening… Tap ■ when you're finished.");
     };
 
-    // Keep final speech permanently and replace only the current interim speech.
-    // Web Speech emits new interim results repeatedly, so overwriting the whole
-    // transcript on every event loses everything the user said before the latest phrase.
     r._voiceFinalTranscript = "";
     r._voiceInterimTranscript = "";
     r._voiceTranscript = "";
@@ -1993,133 +2060,89 @@ function saveTasks(){
       }
       r._voiceInterimTranscript = interim;
       r._voiceTranscript = `${r._voiceFinalTranscript} ${r._voiceInterimTranscript}`.trim();
-      const target=$(activeVoiceTarget);
+      const target=$(targetId);
       if(target) target.value = r._voiceTranscript;
     };
 
+    const commitThisRecognition = ()=>{
+      if(r._voiceCommitted) return;
+      const candidates = [
+        r._voiceTranscript,
+        r._voiceFinalTranscript,
+        r._voiceInterimTranscript,
+        $(targetId)?.value
+      ];
+      const text = candidates.map(v=>String(v || "").trim()).find(Boolean) || "";
+      r._voiceCommitted = true;
+      if(text) commitVoiceResult(mode, targetId, text);
+    };
+
     r.onerror = (event)=>{
-      if(ignoreRecognitionEnd) return;
-      listening = false;
       const btnId = mode==="routine" ? "routineVoiceBtn" : mode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
+      listening = false;
       resetVoiceButton(btnId);
-      if(event.error === "not-allowed" || event.error === "service-not-allowed"){
+      if(ignoreRecognitionEnd || event.error === "aborted") return;
+
+      // Some mobile browsers emit no-speech after putting a usable transcript
+      // in the input. Commit that transcript instead of silently discarding it.
+      const hasText = [
+        r._voiceTranscript,
+        r._voiceFinalTranscript,
+        r._voiceInterimTranscript,
+        $(targetId)?.value
+      ].some(v=>String(v || "").trim());
+      if(hasText){
+        commitThisRecognition();
+      }else if(event.error === "not-allowed" || event.error === "service-not-allowed"){
         showToast("Microphone permission was blocked. Allow mic access and try again.");
-      } else if(event.error === "no-speech"){
+      }else if(event.error === "no-speech"){
         showToast("I didn't hear anything. Try again.");
-      } else if(event.error !== "aborted"){
+      }else{
         showToast("Voice input failed. You can type instead.");
       }
     };
 
     r.onend = ()=>{
-      const wasIgnored = ignoreRecognitionEnd;
       listening = false;
-      const finishedMode = activeVoiceMode;
-      const finishedTarget = activeVoiceTarget;
-      const capturedText = String(
-        r._voiceTranscript ||
-        `${r._voiceFinalTranscript || ""} ${r._voiceInterimTranscript || ""}` ||
-        $(finishedTarget || "quickInput")?.value ||
-        ""
-      ).trim();
-      const btnId = finishedMode==="routine" ? "routineVoiceBtn" : finishedMode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
+      const btnId = mode==="routine" ? "routineVoiceBtn" : mode==="calendar" ? "calendarVoiceBtn" : "voiceBtn";
       resetVoiceButton(btnId);
-      if(wasIgnored) return;
-
-      activeVoiceTarget=null;
-      if(finishedMode==="task"){
-        if(capturedText) finishVoiceTaskInput(capturedText);
-      }else if(finishedMode==="routine"){
-        const text=String(capturedText || $(finishedTarget)?.value || "").trim();
-        if(text){
-          // Routine voice input should commit the routine, not merely open a
-          // form and leave the user to finish the job manually.
-          const parsed=parseVoiceTask(text);
-          const name=(parsed.name || text).trim();
-          const duration=Number(parsed.duration) || 15;
-          if(name){
-            const frequencyMatch=text.match(/\\b(daily|every day|weekly|every week|biweekly|every two weeks|monthly|every month)\\b/i);
-            let freq="Daily";
-            if(frequencyMatch){
-              const f=frequencyMatch[1].toLowerCase();
-              if(f==="weekly" || f==="every week") freq="Weekly";
-              else if(f==="biweekly" || f==="every two weeks") freq="Biweekly";
-              else if(f==="monthly" || f==="every month") freq="Monthly";
-            }
-            routines.push({id:Date.now(),name,icon:"↻",freq,duration,startDate:todayISO()});
-            saveRoutines();
-            $("routineQuickInput").value="";
-            renderRoutines(freq);
-            showToast("Routine added.");
-          }
-        }
-      }else if(finishedMode==="calendar"){
-        const text=$(finishedTarget)?.value.trim();
-        if(text){
-          $("calTask").value=text;
-          $("calendarQuickInput").value="";
-          $("calDate").value=todayISO();
-          $("calTime").value="";
-          $("calendarSheet").classList.add("show");
-        }
-      }
+      if(ignoreRecognitionEnd) return;
+      commitThisRecognition();
+      if(recognition === r) recognition = null;
+      if(activeVoiceTarget === targetId) activeVoiceTarget = null;
+      if(activeVoiceMode === mode) activeVoiceMode = "task";
     };
     return r;
   }
-
   function stopVoiceAndFinalize(){
     if(!recognition){
       listening=false;
       return;
     }
-    // Do not use abort() here. abort() intentionally suppresses the end event,
-    // which is exactly where captured speech is committed to tasks.
+    const current = recognition;
     ignoreRecognitionEnd = false;
-    try { recognition.stop(); }
-    catch(e){
-      const mode = activeVoiceMode;
-      const target = activeVoiceTarget;
-      const text = String(
-        recognition._voiceTranscript ||
-        `${recognition._voiceFinalTranscript || ""} ${recognition._voiceInterimTranscript || ""}` ||
-        $(target)?.value ||
-        ""
-      ).trim();
-      listening=false;
-      recognition=null;
-      activeVoiceTarget=null;
-      activeVoiceMode="task";
-      if(mode==="task" && text){
-        finishVoiceTaskInput(text);
-      }else if(mode==="routine" && text){
-        const parsed=parseVoiceTask(text);
-        const name=(parsed.name || text).trim();
-        const duration=Number(parsed.duration) || 15;
-        if(name){
-          const fm=text.match(/\b(daily|every day|weekly|every week|biweekly|every two weeks|monthly|every month)\b/i);
-          let freq="Daily";
-          if(fm){
-            const f=fm[1].toLowerCase();
-            if(f==="weekly" || f==="every week") freq="Weekly";
-            else if(f==="biweekly" || f==="every two weeks") freq="Biweekly";
-            else if(f==="monthly" || f==="every month") freq="Monthly";
-          }
-          routines.push({id:Date.now(),name,icon:"↻",freq,duration,startDate:todayISO()});
-          saveRoutines(); $("routineQuickInput").value=""; renderRoutines(freq); showToast("Routine added.");
-        }
-      }else if(mode==="calendar" && text){
-        $("calTask").value=text;
-        $("calendarQuickInput").value="";
-        $("calDate").value=todayISO();
-        $("calTime").value="";
-        $("calendarSheet").classList.add("show");
-      }
+    try {
+      current.stop();
+    } catch(e) {
+      const mode = current._voiceMode || activeVoiceMode;
+      const targetId = current._voiceTargetId || activeVoiceTarget || "quickInput";
+      const text = [
+        current._voiceTranscript,
+        current._voiceFinalTranscript,
+        current._voiceInterimTranscript,
+        $(targetId)?.value
+      ].map(v=>String(v || "").trim()).find(Boolean) || "";
+      listening = false;
+      commitVoiceResult(mode, targetId, text);
+      current._voiceCommitted = true;
+      if(recognition === current) recognition = null;
+      activeVoiceTarget = null;
+      activeVoiceMode = "task";
       resetVoiceButton("voiceBtn");
       resetVoiceButton("routineVoiceBtn");
       resetVoiceButton("calendarVoiceBtn");
     }
   }
-
   function startVoice(targetId, mode){
     if(listening && recognition){
       // The stop control must finalize every voice mode. Aborting routine or
@@ -2136,6 +2159,12 @@ function saveTasks(){
 
   $("voiceBtn").addEventListener("click",()=>startVoice("quickInput","task"));
   $("routineVoiceBtn")?.addEventListener("click",()=>startVoice("routineQuickInput","routine"));
+  $("routineQuickInput")?.addEventListener("keydown",e=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      commitVoiceResult("routine", "routineQuickInput", $("routineQuickInput").value);
+    }
+  });
   $("calendarVoiceBtn")?.addEventListener("click",()=>startVoice("calendarQuickInput","calendar"));
 
   // Never leave the microphone running when the app is backgrounded or closed.
