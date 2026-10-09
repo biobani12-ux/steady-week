@@ -968,6 +968,86 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   body[data-theme="dark"] .cancel-btn{background:var(--card);color:var(--ink);border-color:var(--line)}
   body[data-theme="dark"] .up-next-card.empty-next{background:#24262a;border-color:#24262a}
 
+
+/* Full-screen Settings panel on mobile and desktop */
+#settingsSheet{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:100vh!important;
+  display:none;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:0!important;
+  z-index:9999!important;
+}
+#settingsSheet.show{display:flex!important}
+#settingsSheet>.panel{
+  width:100%!important;
+  max-width:none!important;
+  height:100%!important;
+  max-height:none!important;
+  min-height:100%!important;
+  margin:0!important;
+  border-radius:0!important;
+  padding:calc(env(safe-area-inset-top, 0px) + 22px) 20px calc(env(safe-area-inset-bottom, 0px) + 30px)!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+
+
+/* Complete theme palette overrides for hard-coded surfaces */
+html[data-theme="dark"],body[data-theme="dark"]{background:#111214!important;color:#f3f3f3!important}
+body[data-theme="dark"] .app,
+body[data-theme="dark"] .screen,
+body[data-theme="dark"] .content{background:#111214!important;color:#f3f3f3!important}
+body[data-theme="dark"] header h1,
+body[data-theme="dark"] .section-title,
+body[data-theme="dark"] .settings-sheet h2,
+body[data-theme="dark"] .panel h2,
+body[data-theme="dark"] .settings-label b{color:#f3f3f3!important}
+body[data-theme="dark"] .task,
+body[data-theme="dark"] .routine-card,
+body[data-theme="dark"] .progress-card,
+body[data-theme="dark"] .progress-row,
+body[data-theme="dark"] .calendar,
+body[data-theme="dark"] .calendar-day,
+body[data-theme="dark"] .day-timeline,
+body[data-theme="dark"] .up-next-card,
+body[data-theme="dark"] .panel,
+body[data-theme="dark"] .settings-sheet>.panel,
+body[data-theme="dark"] .backup-sheet>.panel,
+body[data-theme="dark"] .sheet .panel{background:#1c1d20!important;color:#f3f3f3!important;border-color:#383a3f!important}
+body[data-theme="dark"] .sheet{background:rgba(0,0,0,.78)!important}
+body[data-theme="dark"] input:not([type="checkbox"]),
+body[data-theme="dark"] select,
+body[data-theme="dark"] textarea{background:#24262a!important;color:#f3f3f3!important;border-color:#45474d!important}
+body[data-theme="dark"] .task-input,
+body[data-theme="dark"] .mini-voice-input{background:#24262a!important;color:#f3f3f3!important;border-color:#45474d!important}
+body[data-theme="dark"] .task .meta,
+body[data-theme="dark"] .routine-card .meta,
+body[data-theme="dark"] .date,
+body[data-theme="dark"] .settings-label span,
+body[data-theme="dark"] .timeline-head,
+body[data-theme="dark"] .up-next-time,
+body[data-theme="dark"] .empty{color:#aaa!important}
+body[data-theme="dark"] nav{background:#17181a!important;border-color:#383a3f!important}
+body[data-theme="dark"] nav button{color:#aaa!important}
+body[data-theme="dark"] nav button.active{color:#fff!important}
+body[data-theme="dark"] .secondary,
+body[data-theme="dark"] .cancel-btn,
+body[data-theme="dark"] .close-sheet{background:#24262a!important;color:#f3f3f3!important;border-color:#45474d!important}
+body[data-theme="dark"] .choice{background:#1c1d20!important;color:#1683f8!important;border-color:#383a3f!important}
+body[data-theme="dark"] .choice.selected{background:#f3f3f3!important;color:#111!important}
+body[data-theme="dark"] .timeline-track{background:#292b30!important;border-color:#45474d!important}
+body[data-theme="dark"] .timeline-hour{border-color:#45474d!important}
+body[data-theme="dark"] .timeline-hour-label{color:#aaa!important}
+body[data-theme="dark"] .settings-row{border-color:#383a3f!important}
+body[data-theme="dark"] .up-next-card.empty-next{background:#24262a!important}
+
 </style>
 </head>
 <body>
@@ -1505,6 +1585,10 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   function applyTheme(theme){
     const selected = theme === "dark" ? "dark" : "light";
     document.body.dataset.theme = selected;
+    document.documentElement.dataset.theme = selected;
+    document.body.style.backgroundColor = selected === "dark" ? "#111214" : "#f7f7f5";
+    document.body.style.color = selected === "dark" ? "#f3f3f3" : "#111111";
+    document.documentElement.style.backgroundColor = selected === "dark" ? "#111214" : "#f7f7f5";
     document.documentElement.style.colorScheme = selected;
     const toggle = $("themeToggle");
     if(toggle) toggle.checked = selected === "dark";
@@ -1514,9 +1598,22 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
     let saved = "light";
     try { saved = localStorage.getItem(THEME_KEY) || "light"; } catch(e) {}
     applyTheme(saved);
-    $("themeToggle")?.addEventListener("change", e => {
-      applyTheme(e.target.checked ? "dark" : "light");
+    // Use delegated events so the switch keeps working if the settings sheet is
+    // rendered or touched through its label/slider on mobile Safari.
+    document.addEventListener("change", e => {
+      if(e.target && e.target.id === "themeToggle"){
+        applyTheme(e.target.checked ? "dark" : "light");
+      }
     });
+    document.addEventListener("click", e => {
+      const toggle = e.target && e.target.closest ? e.target.closest("#themeToggle, .theme-switch .theme-slider") : null;
+      if(!toggle) return;
+      const input = $("themeToggle");
+      if(!input) return;
+      // The native label/input interaction updates checked; defer reading it
+      // until the browser completes the click's default action.
+      setTimeout(() => applyTheme(input.checked ? "dark" : "light"), 0);
+    }, true);
   }
 
   function initBackupUI(){
