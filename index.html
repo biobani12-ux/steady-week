@@ -3701,5 +3701,54 @@ document.addEventListener("click",function(e){
   }
 })();
 </script>
+
+<script id="steadyWeekThemeControllerV25">
+(function(){
+  const KEY = "steadyWeekTheme_v1";
+  function setTheme(value){
+    const theme = value === "dark" ? "dark" : "light";
+    const root = document.documentElement;
+    const body = document.body;
+    if (!root || !body) return;
+    root.setAttribute("data-theme", theme);
+    body.setAttribute("data-theme", theme);
+    root.style.setProperty("color-scheme", theme);
+    root.style.setProperty("background-color", theme === "dark" ? "#111214" : "#f7f7f5");
+    body.style.setProperty("background-color", theme === "dark" ? "#111214" : "#f7f7f5");
+    root.style.setProperty("color", theme === "dark" ? "#f3f3f3" : "#111111");
+    body.style.setProperty("color", theme === "dark" ? "#f3f3f3" : "#111111");
+    const toggle = document.getElementById("themeToggle");
+    if (toggle) toggle.checked = theme === "dark";
+    try { localStorage.setItem(KEY, theme); } catch (_) {}
+  }
+  function init(){
+    let saved = "light";
+    try { saved = localStorage.getItem(KEY) || "light"; } catch (_) {}
+    setTheme(saved);
+    document.addEventListener("change", function(event){
+      if (event.target && event.target.id === "themeToggle") {
+        setTheme(event.target.checked ? "dark" : "light");
+      }
+    }, true);
+    // iOS Safari fallback: catch taps on the switch label/slider as well.
+    document.addEventListener("click", function(event){
+      const target = event.target;
+      if (!target || !target.closest) return;
+      if (!target.closest(".theme-switch")) return;
+      const toggle = document.getElementById("themeToggle");
+      if (!toggle) return;
+      window.setTimeout(function(){
+        setTheme(toggle.checked ? "dark" : "light");
+      }, 0);
+    }, true);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, {once:true});
+  } else {
+    init();
+  }
+})();
+</script>
+
 </body>
 </html>
