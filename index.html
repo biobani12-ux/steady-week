@@ -1069,6 +1069,31 @@ body[data-theme="dark"] .timeline-hour{border-color:#45474d!important}body[data-
 body[data-theme="light"] .task,body[data-theme="light"] .routine-card,body[data-theme="light"] .progress-card,body[data-theme="light"] .progress-row,body[data-theme="light"] .calendar,body[data-theme="light"] .calendar-day,body[data-theme="light"] .day-timeline,body[data-theme="light"] .up-next-card,body[data-theme="light"] .panel,body[data-theme="light"] .sheet .panel{background:#fff!important;color:#111!important;border-color:#e5e5e2!important}
 body[data-theme="light"] .task .meta,body[data-theme="light"] .routine-card .meta,body[data-theme="light"] .date,body[data-theme="light"] .settings-label span,body[data-theme="light"] .timeline-head,body[data-theme="light"] .up-next-time,body[data-theme="light"] .empty{color:#777!important}
 
+
+/* v26: calendar event cards need their own text and surface colors */
+body[data-theme="dark"] #events .event{
+  background:#24262a!important;
+  color:#f3f3f3!important;
+  border:1px solid #383a3f!important;
+}
+body[data-theme="dark"] #events .event b{
+  color:#f3f3f3!important;
+}
+body[data-theme="dark"] #events .event .meta{
+  color:#aaaeb5!important;
+}
+body[data-theme="light"] #events .event{
+  background:#f4f4f1!important;
+  color:#111111!important;
+  border:1px solid #e5e5e2!important;
+}
+body[data-theme="light"] #events .event b{
+  color:#111111!important;
+}
+body[data-theme="light"] #events .event .meta{
+  color:#777777!important;
+}
+
 </style>
 </head>
 <body>
