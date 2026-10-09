@@ -2199,11 +2199,9 @@ function saveTasks(){
       });
       saveRoutines();
       $("routineQuickInput").value = "";
-      syncRoutineTasksForDate(todayISO());
-      renderTasks();
       renderRoutines(freq);
       renderCalendar();
-      showToast("Recurring routine saved.");
+      showToast("Routine saved. Tap + when you want to add it to Today.");
       return true;
     }
 
@@ -2550,11 +2548,11 @@ function saveTasks(){
     routines.push({id:Date.now(),name,icon:"↻",freq:$("routineFreq").value,duration,startDate:$("routineStart").value||todayISO()});
     saveRoutines();
     closeRoutine();
-    syncRoutineTasksForDate(todayISO());
-    renderTasks();
+    // Saving a routine creates only the recurring definition. The user must
+    // explicitly tap its + button to add today's occurrence to Today.
     renderRoutines($("routineFreq").value);
     renderCalendar();
-    showToast("Recurring routine saved.");
+    showToast("Routine saved. Tap + when you want to add it to Today.");
   };
 
   function renderProgress(){
