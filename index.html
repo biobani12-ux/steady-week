@@ -1223,7 +1223,7 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 </div>
 
 
-<div class="sheet" id="settingsSheet">
+<div class="sheet" id="settingsSheet" aria-hidden="true">
   <div class="panel">
     <div class="sheet-head"><h2>Settings</h2><button class="close-sheet" id="closeSettings">×</button></div>
     <div class="settings-row">
@@ -1520,8 +1520,25 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
   }
 
   function initBackupUI(){
-    $("settingsBtn")?.addEventListener("click",()=>$("settingsSheet").classList.add("show"));
-    $("closeSettings")?.addEventListener("click",()=>$("settingsSheet").classList.remove("show"));
+    // Settings open/close is initialized independently of Google backup UI.
+    // This avoids the gear becoming inert if backup setup exits early.
+    const settingsButton = $("settingsBtn");
+    const settingsSheet = $("settingsSheet");
+    const closeSettingsButton = $("closeSettings");
+    if(settingsButton && settingsSheet){
+      settingsButton.addEventListener("click", event=>{
+        event.preventDefault();
+        settingsSheet.classList.add("show");
+        settingsSheet.setAttribute("aria-hidden","false");
+      });
+    }
+    if(closeSettingsButton && settingsSheet){
+      closeSettingsButton.addEventListener("click", event=>{
+        event.preventDefault();
+        settingsSheet.classList.remove("show");
+        settingsSheet.setAttribute("aria-hidden","true");
+      });
+    }
     $("openBackup")?.addEventListener("click",()=>{
       $("settingsSheet").classList.remove("show");
       $("backupSheet").classList.add("show");
@@ -2542,12 +2559,16 @@ function saveTasks(){
   };
 
   function openFocus(t){
+    // Opening a task from Up Next starts its timer immediately, with no
+    // second tap required on the focus screen.
+    if(timer){clearInterval(timer);timer=null}
     focusTask=t;
     remaining=Math.max(60, Number(t.duration)*60);
     total=remaining;
     updateFocusHeader();
     updateTimer();
     showScreen("focus");
+    startFocusTimer();
   }
 
   function updateFocusHeader(){
@@ -2575,14 +2596,8 @@ function saveTasks(){
     setTimeout(()=>showScreen("home"),500);
   }
 
-  $("pause").onclick=()=>{
-    if(timer){
-      clearInterval(timer);
-      timer=null;
-      $("pause").textContent="▶";
-      return;
-    }
-
+  function startFocusTimer(){
+    if(timer || !focusTask || focusTask.done) return;
     $("pause").textContent="Ⅱ";
     timer=setInterval(()=>{
       remaining--;
@@ -2595,6 +2610,16 @@ function saveTasks(){
         finishCurrentStep();
       }
     },1000);
+  }
+
+  $("pause").onclick=()=>{
+    if(timer){
+      clearInterval(timer);
+      timer=null;
+      $("pause").textContent="▶";
+      return;
+    }
+    startFocusTimer();
   };
 
   $("minus").onclick=()=>{remaining=Math.max(60,remaining-300);updateTimer()};
