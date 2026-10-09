@@ -1496,6 +1496,7 @@ function saveTasks(){
   function saveRoutines(){try{localStorage.setItem(ROUTINES_KEY,JSON.stringify(routines));}catch(e){console.warn("Could not save routines",e);}}
 
   function routineIsDueOn(routine, dateISO){
+    if(routine.ended) return false;
     const startISO = routine.startDate || dateISO;
     if(dateISO < startISO) return false;
     if(routine.endDate && dateISO > routine.endDate) return false;
@@ -1806,14 +1807,13 @@ function saveTasks(){
     const occurrenceDate=modifyingOriginalRoutineDate || task.routineDate || task.taskDate || todayISO();
 
     if(routine && scope === "future"){
-      // Stop the series at the selected occurrence, preserving past records.
-      if((routine.startDate || occurrenceDate) >= occurrenceDate){
-        routines=routines.filter(r=>String(r.id)!==String(routine.id));
-      }else{
-        const d=new Date(occurrenceDate+"T12:00:00Z");
-        d.setUTCDate(d.getUTCDate()-1);
-        routine.endDate=d.toISOString().slice(0,10);
-      }
+      // Stop generating occurrences from the selected date onward, but keep
+      // the routine definition in the Routines tab so the user's routine is
+      // not silently erased when its first occurrence is deleted.
+      const d=new Date(occurrenceDate+"T12:00:00Z");
+      d.setUTCDate(d.getUTCDate()-1);
+      routine.endDate=d.toISOString().slice(0,10);
+      routine.ended=true;
       for(let i=tasks.length-1;i>=0;i--){
         const candidate=tasks[i];
         if(String(candidate.routineId || "") === String(routine.id) &&
@@ -2506,7 +2506,7 @@ function saveTasks(){
     const list=routines.filter(r=>r.freq===filter);
     $("routineList").innerHTML=list.length ? list.map(r=>`<div class="routine">
       <span style="font-size:22px">${r.icon||"↻"}</span>
-      <div><b>${escapeHtml(r.name)}</b><div class="meta">${r.duration} min · ${r.freq}${r.startDate?" · from "+formatTaskDate(r.startDate):""}</div></div>
+      <div><b>${escapeHtml(r.name)}</b><div class="meta">${r.duration} min · ${r.freq}${r.startDate?" · from "+formatTaskDate(r.startDate):""}${r.ended?" · ended":""}</div></div>
       <div class="routine-actions"><button class="add" data-action="add" data-id="${r.id}">+</button><button data-action="delete" data-id="${r.id}">×</button></div>
     </div>`).join("") : '<div class="routine-empty">No routines here yet.<br>Add one. Humanity survives another recurring task.</div>';
     $("routineList").querySelectorAll("button").forEach(b=>b.onclick=()=>{
@@ -2515,6 +2515,10 @@ function saveTasks(){
         routines=routines.filter(x=>String(x.id)!==String(r.id)); saveRoutines(); renderRoutines(filter); showToast("Routine deleted."); return;
       }
       const today = todayISO();
+      if(r.ended){
+        showToast("This routine has ended. Create a new routine to restart it.");
+        return;
+      }
       const existing = tasks.some(t => String(t.routineId || "") === String(r.id) && t.routineDate === today);
       if(existing){
         showToast("This routine is already scheduled for today.");
