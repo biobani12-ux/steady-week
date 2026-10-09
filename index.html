@@ -912,6 +912,62 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 .settings-label b{display:block;font-size:15px}
 .settings-label span{display:block;color:#888;font-size:12px;margin-top:3px}
 .settings-gear{font-size:20px}
+
+  /* Persistent light/dark appearance */
+  .theme-switch{position:relative;display:inline-block;flex:0 0 52px;width:52px;height:30px}
+  .theme-switch input{position:absolute;opacity:0;width:1px;height:1px}
+  .theme-slider{position:absolute;inset:0;border-radius:99px;background:#d5d5d5;transition:background .2s;cursor:pointer}
+  .theme-slider:before{content:"";position:absolute;width:24px;height:24px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .2s}
+  .theme-switch input:checked + .theme-slider{background:#1683f8}
+  .theme-switch input:checked + .theme-slider:before{transform:translateX(22px)}
+  .theme-switch input:focus-visible + .theme-slider{outline:3px solid #1683f8;outline-offset:3px}
+  body[data-theme="dark"]{
+    --bg:#111214;--card:#1c1d20;--ink:#f3f3f3;--muted:#aaa;--line:#383a3f;--soft:#24262a;--black:#f3f3f3;
+    background:var(--bg);color:var(--ink);color-scheme:dark
+  }
+  body[data-theme="dark"] .app{background:var(--bg);color:var(--ink)}
+  body[data-theme="dark"] header,body[data-theme="dark"] .content{color:var(--ink)}
+  body[data-theme="dark"] .task,
+  body[data-theme="dark"] .progress-card,
+  body[data-theme="dark"] .routine-card,
+  body[data-theme="dark"] .calendar,
+  body[data-theme="dark"] .up-next-card,
+  body[data-theme="dark"] .settings-sheet .panel,
+  body[data-theme="dark"] .panel,
+  body[data-theme="dark"] .day-timeline,
+  body[data-theme="dark"] .calendar-day,
+  body[data-theme="dark"] .progress-row{background:var(--card);color:var(--ink);border-color:var(--line)}
+  body[data-theme="dark"] .task .meta,
+  body[data-theme="dark"] .routine-card .meta,
+  body[data-theme="dark"] .date,
+  body[data-theme="dark"] .section-title,
+  body[data-theme="dark"] .timeline-head,
+  body[data-theme="dark"] .up-next-time{color:var(--muted)}
+  body[data-theme="dark"] input:not(.task-input):not([type="checkbox"]),
+  body[data-theme="dark"] select,
+  body[data-theme="dark"] textarea{background:#24262a;color:var(--ink);border-color:#45474d}
+  body[data-theme="dark"] .task-input{background:#24262a;color:#f3f3f3;border-color:#45474d}
+  body[data-theme="dark"] .voice-box,
+  body[data-theme="dark"] .quick-voice-mini{background:#050506;color:#f5f5f5}
+  body[data-theme="dark"] .up-next-card .up-next-play,
+  body[data-theme="dark"] .icon-btn,
+  body[data-theme="dark"] .primary{background:#f3f3f3;color:#111}
+  body[data-theme="dark"] nav{background:#17181a;border-color:#383a3f}
+  body[data-theme="dark"] nav button{color:#aaa}
+  body[data-theme="dark"] nav button.active{color:#fff}
+  body[data-theme="dark"] .choice{background:var(--card);color:#1683f8;border-color:var(--line)}
+  body[data-theme="dark"] .choice.selected{background:#f3f3f3;color:#111;border-color:#f3f3f3}
+  body[data-theme="dark"] .check{background:#24262a;color:#fff}
+  body[data-theme="dark"] .check[aria-pressed="true"],
+  body[data-theme="dark"] .task.done .check{background:#f3f3f3;color:#111}
+  body[data-theme="dark"] .empty{color:var(--muted)}
+  body[data-theme="dark"] .timeline-track{background:#292b30;border-color:#45474d}
+  body[data-theme="dark"] .timeline-hour{border-color:#45474d}
+  body[data-theme="dark"] .timeline-hour-label{color:#aaa}
+  body[data-theme="dark"] .secondary,
+  body[data-theme="dark"] .cancel-btn{background:var(--card);color:var(--ink);border-color:var(--line)}
+  body[data-theme="dark"] .up-next-card.empty-next{background:#24262a;border-color:#24262a}
+
 </style>
 </head>
 <body>
@@ -1170,6 +1226,13 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 <div class="sheet" id="settingsSheet">
   <div class="panel">
     <div class="sheet-head"><h2>Settings</h2><button class="close-sheet" id="closeSettings">×</button></div>
+    <div class="settings-row">
+      <div class="settings-label"><b>Appearance</b><span>Switch between light and dark themes. Your choice is saved on this device.</span></div>
+      <label class="theme-switch" aria-label="Dark theme">
+        <input type="checkbox" id="themeToggle" role="switch" aria-label="Use dark theme">
+        <span class="theme-slider"></span>
+      </label>
+    </div>
     <div class="settings-row">
       <div class="settings-label"><b>Google backup</b><span>Keep a copy of your Steady Week data in your Google account.</span></div>
       <button class="secondary" id="openBackup">Manage</button>
@@ -1436,6 +1499,24 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
     googleBackupFileId = null;
     localStorage.removeItem("steadyWeekGoogleBackupFileId_v1");
     updateBackupStatus("Not connected","Google is disconnected on this device. Your local data is unchanged.");
+  }
+
+  const THEME_KEY = "steadyWeekTheme_v1";
+  function applyTheme(theme){
+    const selected = theme === "dark" ? "dark" : "light";
+    document.body.dataset.theme = selected;
+    document.documentElement.style.colorScheme = selected;
+    const toggle = $("themeToggle");
+    if(toggle) toggle.checked = selected === "dark";
+    try { localStorage.setItem(THEME_KEY, selected); } catch(e) {}
+  }
+  function initTheme(){
+    let saved = "light";
+    try { saved = localStorage.getItem(THEME_KEY) || "light"; } catch(e) {}
+    applyTheme(saved);
+    $("themeToggle")?.addEventListener("change", e => {
+      applyTheme(e.target.checked ? "dark" : "light");
+    });
   }
 
   function initBackupUI(){
@@ -3376,6 +3457,7 @@ function saveTasks(){
 })();
 
 
+  initTheme();
   initBackupUI();
 </script>
 
