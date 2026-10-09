@@ -167,7 +167,19 @@
   .timer-controls .main{background:#111;color:#fff;width:68px;height:68px;font-size:20px}
   .progress{height:7px;background:#eee;border-radius:8px;overflow:hidden}.progress>i{display:block;height:100%;background:#111;width:0}
   .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:12px;display:none;z-index:50;font-size:13px}
-  .welcome-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1000;display:flex;align-items:flex-end}.welcome-card{background:#fff;width:100%;border-radius:28px 28px 0 0;padding:30px 24px 34px;box-sizing:border-box}.welcome-kicker{font-size:11px;letter-spacing:1.5px;color:#777;font-weight:700;margin-bottom:12px}.welcome-card h2{font-size:30px;margin:0 0 10px}.welcome-card p{color:#777;line-height:1.45;margin:0 0 22px}.welcome-card input{font-size:18px;margin-bottom:12px}.day-timeline{margin:18px 0 24px;padding:14px 14px 16px;background:#f4f4f4;border-radius:16px}.timeline-head{display:flex;justify-content:space-between;gap:10px;font-size:10px;letter-spacing:1.1px;font-weight:700;color:#777;margin-bottom:13px}.timeline-head span:last-child{letter-spacing:0;text-transform:none;font-weight:600}.timeline-track{height:34px;position:relative;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e3e3e3}.timeline-hour{position:absolute;top:0;bottom:0;border-left:1px solid #eee}.timeline-hour-label{position:absolute;top:7px;transform:translateX(-50%);font-size:9px;color:#aaa}.timeline-block{position:absolute;top:5px;height:24px;background:#111;border-radius:7px;min-width:5px}.timeline-now{position:absolute;top:0;bottom:0;width:2px;background:#777;z-index:4}@media(min-width:700px){.welcome-overlay{align-items:center;justify-content:center}.welcome-card{width:430px;border-radius:24px}}
+  .welcome-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1000;display:flex;align-items:flex-end}.welcome-card{background:#fff;width:100%;border-radius:28px 28px 0 0;padding:30px 24px 34px;box-sizing:border-box}.welcome-kicker{font-size:11px;letter-spacing:1.5px;color:#777;font-weight:700;margin-bottom:12px}.welcome-card h2{font-size:30px;margin:0 0 10px}.welcome-card p{color:#777;line-height:1.45;margin:0 0 22px}.welcome-card input{font-size:18px;margin-bottom:12px}
+.up-next-card{display:block;width:100%;text-align:left;border:1px solid #dedede;border-radius:20px;padding:17px 19px;margin:16px 0 22px;background:#fff;color:#111;cursor:pointer;font:inherit;box-shadow:0 1px 0 rgba(0,0,0,.02);-webkit-tap-highlight-color:transparent}
+.up-next-card:active{transform:scale(.995)}
+.up-next-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;font-weight:800;letter-spacing:1.1px;color:#777}
+.up-next-action{color:#1683f8;letter-spacing:.4px;white-space:nowrap}
+.up-next-main{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:11px}
+.up-next-copy{min-width:0}
+.up-next-time{font-size:14px;color:#777;margin-bottom:4px}
+.up-next-name{font-size:21px;font-weight:750;line-height:1.2;overflow-wrap:anywhere}
+.up-next-play{flex:0 0 44px;width:44px;height:44px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;padding-left:3px}
+.up-next-card.empty-next{background:#f2f2f2;border-color:#f2f2f2;cursor:default}
+.up-next-card.empty-next .up-next-play{background:#d9d9d9;color:#555}
+.day-timeline{margin:18px 0 24px;padding:14px 14px 16px;background:#f4f4f4;border-radius:16px}.timeline-head{display:flex;justify-content:space-between;gap:10px;font-size:10px;letter-spacing:1.1px;font-weight:700;color:#777;margin-bottom:13px}.timeline-head span:last-child{letter-spacing:0;text-transform:none;font-weight:600}.timeline-track{height:34px;position:relative;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e3e3e3}.timeline-hour{position:absolute;top:0;bottom:0;border-left:1px solid #eee}.timeline-hour-label{position:absolute;top:7px;transform:translateX(-50%);font-size:9px;color:#aaa}.timeline-block{position:absolute;top:5px;height:24px;background:#111;border-radius:7px;min-width:5px}.timeline-now{position:absolute;top:0;bottom:0;width:2px;background:#777;z-index:4}@media(min-width:700px){.welcome-overlay{align-items:center;justify-content:center}.welcome-card{width:430px;border-radius:24px}}
 
   .sheet-head{display:flex;align-items:center;justify-content:space-between}
   .sheet-head h2{margin:0}
@@ -917,7 +929,11 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
         <div style="font-size:11px;color:#aaa;margin-top:10px">For multiple tasks, say “then” between each: “Clean the kitchen at 10 AM, then buy groceries at 12 PM, then send an email at 3 PM.”</div>
       </div>
 <div class="day-timeline" id="dayTimeline"><div class="timeline-head"><span>YOUR DAY</span><span id="timelineSummary">No time blocked yet</span></div><div class="timeline-track" id="timelineTrack"></div></div>
-            <div class="section-title"><span>Today's tasks</span><button class="link" id="clearDone">Clear done</button></div>
+      <button class="up-next-card" id="upNextCard" type="button" aria-label="Start the next task timer">
+        <div class="up-next-top"><span>UP NEXT</span><span class="up-next-action">START TIMER ↗</span></div>
+        <div class="up-next-main"><div class="up-next-copy"><div class="up-next-time" id="upNextTime">Finding your next task…</div><div class="up-next-name" id="upNextName"></div></div><div class="up-next-play" aria-hidden="true">▶</div></div>
+      </button>
+      <div class="section-title"><span>Today's tasks</span><button class="link" id="clearDone">Clear done</button></div>
       <div id="taskList"></div>
     </div>
   </section>
@@ -1656,6 +1672,47 @@ function saveTasks(){
   function taskDateTimeKey(t){ return `${t.taskDate || todayISO()} ${t.when || "23:59"}`; }
   function renderDayTimeline(sortedTasks){ const track=$("timelineTrack"); if(!track)return; track.innerHTML=""; const startHour=6,endHour=24,span=(endHour-startHour)*60; for(let hour=startHour;hour<=endHour;hour+=3){const pct=((hour-startHour)*60/span)*100; const line=document.createElement("div"); line.className="timeline-hour"; line.style.left=pct+"%"; if(hour<24){const lab=document.createElement("div");lab.className="timeline-hour-label";lab.textContent=hour===12?"12 PM":(hour<12?hour+" AM":(hour-12)+" PM");line.appendChild(lab)} track.appendChild(line)} const timed=sortedTasks.filter(t=>(t.taskDate||todayISO())===todayISO()&&t.when&&!t.done); timed.forEach(t=>{const mins=taskMinutes(t),left=Math.max(0,Math.min(100,((mins-startHour*60)/span)*100)),width=Math.max(1,Math.min(100-left,(Number(t.duration||15)/span)*100));const b=document.createElement("div");b.className="timeline-block";b.style.left=left+"%";b.style.width=width+"%";b.title=`${t.name} · ${t.when} · ${t.duration} min`;track.appendChild(b)}); const now=new Date(),nowMin=now.getHours()*60+now.getMinutes(); if(nowMin>=startHour*60&&nowMin<=endHour*60){const n=document.createElement("div");n.className="timeline-now";n.style.left=((nowMin-startHour*60)/span*100)+"%";track.appendChild(n)} const total=timed.reduce((sum,t)=>sum+Number(t.duration||0),0);$("timelineSummary").textContent=timed.length?`${timed.length} task${timed.length>1?"s":""} · ${total} min blocked`:"No time blocked yet"; }
 
+  function renderUpNextTask(sortedTasks){
+    const card=$("upNextCard");
+    const timeEl=$("upNextTime");
+    const nameEl=$("upNextName");
+    if(!card || !timeEl || !nameEl) return;
+
+    const pending=sortedTasks.filter(t=>!t.done);
+    const now=new Date();
+    const nowMinutes=now.getHours()*60+now.getMinutes();
+    const timed=pending.filter(t=>t.when).sort((a,b)=>taskMinutes(a)-taskMinutes(b));
+    const upcoming=timed.find(t=>taskMinutes(t)>=nowMinutes);
+    const overdue=timed.find(t=>taskMinutes(t)<nowMinutes);
+    const anyTime=pending.find(t=>!t.when);
+    const next=upcoming || overdue || anyTime || null;
+
+    card.classList.toggle("empty-next",!next);
+    if(!next){
+      timeEl.textContent="You're all caught up";
+      nameEl.textContent="No pending tasks for today";
+      card.querySelector(".up-next-action").textContent="ALL DONE";
+      card.querySelector(".up-next-play").textContent="✓";
+      card.setAttribute("aria-label","No pending tasks");
+      card.onclick=null;
+      return;
+    }
+
+    card.querySelector(".up-next-action").textContent="START TIMER ↗";
+    card.querySelector(".up-next-play").textContent="▶";
+    card.setAttribute("aria-label",`Start timer for ${next.name}`);
+    if(next.when){
+      const isUpcoming=taskMinutes(next)>=nowMinutes;
+      timeEl.textContent=isUpcoming
+        ? `Today at ${formatTime(next.when)}`
+        : `Scheduled for ${formatTime(next.when)} · still pending`;
+    }else{
+      timeEl.textContent="Any time · when you're ready";
+    }
+    nameEl.textContent=next.name;
+    card.onclick=()=>openFocus(next);
+  }
+
   function formatTime(value){
     if(!value) return "";
     const [hh,mm]=value.split(":").map(Number);
@@ -1849,6 +1906,7 @@ function saveTasks(){
     const todayList=tasks.filter(t => (t.taskDate || today) === today);
     const sorted=[...todayList].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));
     renderDayTimeline(sorted);
+    renderUpNextTask(sorted);
     if(!sorted.length){box.innerHTML='<div class="empty">Nothing here. Suspiciously peaceful.</div>'; return;}
     sorted.forEach(t=>{
       const el=document.createElement("div");
