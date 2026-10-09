@@ -1485,65 +1485,6 @@ function saveTasks(){
   }
   let routines = loadRoutines().filter(r=>["Daily","Weekly","Biweekly","Monthly"].includes(r.freq));
   function saveRoutines(){try{localStorage.setItem(ROUTINES_KEY,JSON.stringify(routines));}catch(e){console.warn("Could not save routines",e);}}
-
-  function routineIsDueOn(routine, dateISO){
-    const startISO = routine.startDate || dateISO;
-    if(dateISO < startISO) return false;
-    const start = new Date(startISO + "T12:00:00Z");
-    const date = new Date(dateISO + "T12:00:00Z");
-    const days = Math.floor((date.getTime() - start.getTime()) / 86400000);
-    switch(routine.freq){
-      case "Daily": return true;
-      case "Weekly": return days % 7 === 0;
-      case "Biweekly": return days % 14 === 0;
-      case "Monthly": {
-        const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
-        return date.getUTCDate() === Math.min(start.getUTCDate(), lastDay);
-      }
-      default: return false;
-    }
-  }
-
-  function syncRoutineTasksForDate(dateISO = todayISO()){
-    let changed = false;
-    routines.forEach(routine=>{
-      if(!routineIsDueOn(routine, dateISO)) return;
-      const alreadyExists = tasks.some(task =>
-        String(task.routineId || "") === String(routine.id) &&
-        task.routineDate === dateISO
-      );
-      if(alreadyExists) return;
-
-      // Reuse a matching one-off task already on that date instead of
-      // creating a duplicate when recurrence is enabled for existing routines.
-      const existingSameName = tasks.find(task =>
-        (task.taskDate || dateISO) === dateISO &&
-        String(task.name || "").trim().toLowerCase() === String(routine.name || "").trim().toLowerCase() &&
-        !task.routineId
-      );
-      if(existingSameName){
-        existingSameName.routineId = routine.id;
-        existingSameName.routineDate = dateISO;
-        changed = true;
-        return;
-      }
-
-      tasks.push({
-        id: Date.now() + Math.floor(Math.random() * 100000),
-        name: routine.name,
-        when: "",
-        duration: Number(routine.duration) || 15,
-        done: false,
-        repeat: "None",
-        taskDate: dateISO,
-        routineId: routine.id,
-        routineDate: dateISO
-      });
-      changed = true;
-    });
-    if(changed) saveTasks();
-    return changed;
-  }
   saveRoutines();
   let events = [];
   const PROGRESS_KEY = "steadyWeekProgress_v1";
@@ -1710,7 +1651,6 @@ function saveTasks(){
 
 
   function renderTasks(){
-    syncRoutineTasksForDate(todayISO());
     rollPendingTasksForward();
     const box=$("taskList"); box.innerHTML="";
     const today=todayISO();
@@ -2067,10 +2007,8 @@ function saveTasks(){
       });
       saveRoutines();
       $("routineQuickInput").value = "";
-      syncRoutineTasksForDate(todayISO());
-      renderTasks();
       renderRoutines(freq);
-      showToast("Recurring routine saved.");
+      showToast("Routine added.");
       return true;
     }
 
@@ -2381,21 +2319,8 @@ function saveTasks(){
       if(b.dataset.action==="delete"){
         routines=routines.filter(x=>String(x.id)!==String(r.id)); saveRoutines(); renderRoutines(filter); showToast("Routine deleted."); return;
       }
-      const today = todayISO();
-      const existing = tasks.some(t => String(t.routineId || "") === String(r.id) && t.routineDate === today);
-      if(existing){
-        showToast("This routine is already scheduled for today.");
-        return;
-      }
-      if(!routineIsDueOn(r, today)){
-        // The plus button is an explicit one-off add, even on a non-scheduled day.
-        tasks.push({id:Date.now(),name:r.name,duration:Number(r.duration),done:false,taskDate:today,routineId:r.id,routineDate:today});
-        saveTasks();renderTasks();showToast("Added to Today once.");
-        return;
-      }
-      syncRoutineTasksForDate(today);
-      renderTasks();
-      showToast("Routine scheduled for today.");
+      tasks.push({id:Date.now(),name:r.name,duration:Number(r.duration),done:false,taskDate:todayISO()});
+      saveTasks();renderTasks();showToast("Routine added to Today.");
     });
   }
 
@@ -2411,12 +2336,7 @@ function saveTasks(){
     if(!name){showToast("Add a routine name first.");return}
     if(!duration || duration<1){showToast("Duration must be at least 1 minute.");return}
     routines.push({id:Date.now(),name,icon:"↻",freq:$("routineFreq").value,duration,startDate:$("routineStart").value||todayISO()});
-    saveRoutines();
-    closeRoutine();
-    syncRoutineTasksForDate(todayISO());
-    renderTasks();
-    renderRoutines($("routineFreq").value);
-    showToast("Recurring routine saved.");
+    saveRoutines(); closeRoutine(); renderRoutines($("routineFreq").value); showToast("Routine added.");
   };
 
   function renderProgress(){
