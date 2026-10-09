@@ -914,7 +914,7 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
           <button class="mic" id="voiceBtn">●</button>
           <input class="task-input" id="quickInput" placeholder='e.g. "Clean kitchen for 20 min"'>
         </div>
-        <div style="font-size:11px;color:#aaa;margin-top:10px">Tap the mic and say: “Clean kitchen for 20 minutes at 6 PM.”</div>
+        <div style="font-size:11px;color:#aaa;margin-top:10px">For multiple tasks, say “then” between each: “Clean the kitchen at 10 AM, then buy groceries at 12 PM, then send an email at 3 PM.”</div>
       </div>
 <div class="day-timeline" id="dayTimeline"><div class="timeline-head"><span>YOUR DAY</span><span id="timelineSummary">No time blocked yet</span></div><div class="timeline-track" id="timelineTrack"></div></div>
             <div class="section-title"><span>Today's tasks</span><button class="link" id="clearDone">Clear done</button></div>
@@ -1449,7 +1449,7 @@ function loadTasks(){
         // Keep demo/default content generic even when an older build stored personal demo text.
         return parsed.map(t => {
           if(!t) return t;
-          const clean = t.name === "Drop Lily at bus"
+          const clean = t.name === "Prepare for the day"
             ? {...t, name:"Morning preparation"}
             : {...t};
           delete clean.steps;
@@ -1875,7 +1875,7 @@ function saveTasks(){
       .replace(/[,;]+/g, "\n");
 
     // Natural speech often has no punctuation:
-    // "Call mom at 10 AM Pick up Lily at 12 PM Grocery shopping at 7 PM".
+    // "Clean the kitchen at 10 AM Buy groceries at 12 PM Send an email at 3 PM".
     // End a task immediately after a clock expression.
     prepared = prepared.replace(
       /(\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b)(?=\s+\S)/gi,
