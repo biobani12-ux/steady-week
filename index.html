@@ -1154,7 +1154,7 @@ body[data-theme="light"] #events .event .meta{
     <div class="content">
       <div class="quick-voice-mini">
         <button class="mic mini-mic" id="calendarVoiceBtn" aria-label="Start calendar voice input">●</button>
-        <input class="task-input mini-voice-input" id="calendarQuickInput" placeholder='Say a task, e.g. "Doctor appointment tomorrow at 4 PM"'>
+        <input class="task-input mini-voice-input" id="calendarQuickInput" placeholder='Say a task, e.g. "Doctor appointment on 14th November at 4 PM"'>
       </div>
       <div class="calendar">
         <div class="cal-head">
@@ -2332,7 +2332,7 @@ function saveTasks(){
     // Explicit dates such as "October 12" or "12 October".
     const monthNames = "january|february|march|april|may|june|july|august|september|october|november|december";
     const explicitDate = clean.match(
-      new RegExp("\\b(?:on\\s+)?(\\d{1,2})\\s+(" + monthNames + ")\\b|\\b(?:on\\s+)?(" + monthNames + ")\\s+(\\d{1,2})\\b", "i")
+      new RegExp("\\b(?:on\\s+)?(\\d{1,2})(?:st|nd|rd|th)?\\s+(" + monthNames + ")\\b|\\b(?:on\\s+)?(" + monthNames + ")\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b", "i")
     );
     if (explicitDate) {
       let day, monthName;
@@ -2591,10 +2591,12 @@ function saveTasks(){
     }
 
     if(mode === "calendar"){
-      $("calTask").value = text;
+      const parsed = parseVoiceTask(text);
+      $("calTask").value = String(parsed.name || text).trim();
       $("calendarQuickInput").value = "";
-      $("calDate").value = todayISO();
-      $("calTime").value = "";
+      $("calDate").value = parsed.taskDate || todayISO();
+      $("calTime").value = parsed.when || "";
+      $("calRepeat").value = "Does not repeat";
       $("calendarSheet").classList.add("show");
       return true;
     }
