@@ -2505,6 +2505,7 @@ function saveTasks(){
       el.querySelector(".check").addEventListener("click",()=>{
         const completing = !t.done;
         t.done=!t.done;
+        if(completing && window.steadyWeekTrack) window.steadyWeekTrack("task_completed",{source:"task_check"});
         if(completing) playCompletionSound();
         saveTasks(); recordProgressForDate(today); renderTasks(); updateBreakGameAvailability();
         if(todayTasksAreComplete()){
@@ -3125,6 +3126,7 @@ function saveTasks(){
   $("minus").onclick=()=>{remaining=Math.max(60,remaining-300);updateTimer()};
   $("plus").onclick=()=>{remaining+=300;total=Math.max(total,remaining);updateTimer()};
   function completeFocus(){
+    if(window.steadyWeekTrack) window.steadyWeekTrack("timer_completed",{completion_type:"focus_flow"});
     if(focusTask){
       const wasIncomplete = !focusTask.done;
       focusTask.done=true;
@@ -3216,6 +3218,7 @@ function saveTasks(){
     if(!name){showToast("Add a routine name first.");return}
     if(!duration || duration<1){showToast("Duration must be at least 1 minute.");return}
     routines.push({id:Date.now(),name,icon:"↻",freq:$("routineFreq").value,duration,startDate:$("routineStart").value||todayISO()});
+    if(window.steadyWeekTrack) window.steadyWeekTrack("routine_created",{frequency:$("routineFreq").value});
     saveRoutines();
     closeRoutine();
     // Saving a routine creates only the recurring definition. The user must
@@ -4266,58 +4269,237 @@ document.addEventListener("click",function(e){
 
 
 <script>
-/* Steady Week GA4 interaction events. Only generic feature names are sent. */
+/* Steady Week GA4 product analytics v37.
+   Never send task names, routine names, notes, voice transcripts, names, or other user content. */
 (function () {
-  if (window.__steadyWeekAnalyticsBound) return;
-  window.__steadyWeekAnalyticsBound = true;
+  if (window.__steadyWeekAnalyticsV37) return;
+  window.__steadyWeekAnalyticsV37 = true;
 
   function track(name, params) {
     if (typeof window.steadyWeekTrack === 'function') {
       window.steadyWeekTrack(name, params || {});
     }
   }
+  function safeTabName(screen) {
+    var map = {home:'today', today:'today', progress:'progress', routines:'routines', calendar:'calendar', break:'break', focus:'focus'};
+    return map[screen] || 'other';
+  }
+  var currentTab = null;
+  var tabStartedAt = 0;
+  var lastTabSent = '';
+  var sessionStartedAt = Date.now();
 
-  // Track navigation tabs using visible labels/IDs only, never task content.
-  document.addEventListener('click', function (event) {
-    var el = event.target && event.target.closest ? event.target.closest('button, a, [role="tab"]') : null;
-    if (!el) return;
-
-    var id = (el.id || '').toLowerCase();
-    var label = (el.getAttribute('aria-label') || el.textContent || '').trim().toLowerCase();
-    var tabMap = [
-      ['today', 'today'], ['routine', 'routines'], ['calendar', 'calendar'],
-      ['progress', 'progress'], ['break', 'break']
-    ];
-    for (var i = 0; i < tabMap.length; i++) {
-      if (id.indexOf(tabMap[i][0]) !== -1 || label === tabMap[i][0] || label.indexOf(tabMap[i][0]) === 0) {
-        track('tab_view', { tab_name: tabMap[i][1] });
-        break;
+  function recordTab(screen) {
+    var next = safeTabName(screen);
+    if (!next || next === 'other') return;
+    var now = Date.now();
+    if (currentTab && tabStartedAt && now >= tabStartedAt) {
+      var seconds = Math.round((now - tabStartedAt) / 1000);
+      if (seconds >= 1 && seconds <= 86400) {
+        track('tab_engagement', {
+          tab_name: currentTab,
+          duration_seconds: seconds,
+          timing_method: 'visible_screen'
+        });
       }
     }
-
-    if (id.indexOf('timer') !== -1 && /start|begin/i.test(label)) {
-      track('timer_start', { source: 'button' });
+    currentTab = next;
+    tabStartedAt = now;
+    if (next !== lastTabSent) {
+      track('tab_view', {tab_name: next});
+      lastTabSent = next;
     }
-    if (id.indexOf('wordle') !== -1 || label.indexOf('wordle') !== -1) {
-      track('break_activity_start', { activity_name: 'wordle' });
-    } else if (label.indexOf('breath') !== -1) {
-      track('break_activity_start', { activity_name: 'breathing' });
-    } else if (label.indexOf('doodle') !== -1) {
-      track('break_activity_start', { activity_name: 'doodle' });
-    } else if (label.indexOf('lofi') !== -1 || label.indexOf('lo-fi') !== -1) {
-      track('break_activity_start', { activity_name: 'lofi' });
+  }
+
+  function activeScreen() {
+    var active = document.querySelector('.screen.active');
+    return active ? active.id : null;
+  }
+  function syncTab() {
+    var id = activeScreen();
+    if (id) recordTab(id);
+  }
+
+  // Track actual screen transitions, including transitions initiated in code rather than nav clicks.
+  var observer = new MutationObserver(function (mutations) {
+    for (var i = 0; i < mutations.length; i++) {
+      if (mutations[i].type === 'attributes' && mutations[i].attributeName === 'class') {
+        var target = mutations[i].target;
+        if (target && target.classList && target.classList.contains('screen')) {
+          syncTab();
+          return;
+        }
+      }
+    }
+  });
+  function beginObserver() {
+    document.querySelectorAll('.screen').forEach(function (screen) {
+      observer.observe(screen, {attributes:true, attributeFilter:['class']});
+    });
+    syncTab();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', beginObserver, {once:true});
+  } else {
+    beginObserver();
+  }
+
+  // Don't count background time as active tab time.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      if (currentTab && tabStartedAt) {
+        var seconds = Math.round((Date.now() - tabStartedAt) / 1000);
+        if (seconds >= 1 && seconds <= 86400) {
+          track('tab_engagement', {tab_name:currentTab, duration_seconds:seconds, timing_method:'visible_screen'});
+        }
+      }
+      tabStartedAt = 0;
+    } else {
+      currentTab = null;
+      tabStartedAt = 0;
+      syncTab();
+    }
+  });
+  window.addEventListener('pagehide', function () {
+    if (!document.hidden && currentTab && tabStartedAt) {
+      var seconds = Math.round((Date.now() - tabStartedAt) / 1000);
+      if (seconds >= 1 && seconds <= 86400) {
+        track('tab_engagement', {tab_name:currentTab, duration_seconds:seconds, timing_method:'visible_screen'});
+      }
+    }
+  });
+
+  var trackedTaskAdd = false;
+  var trackedVoiceAttempt = false;
+  var trackedTimer = false;
+  var trackedBreaks = Object.create(null);
+
+  document.addEventListener('click', function (event) {
+    var el = event.target && event.target.closest ? event.target.closest('button, a, [role="button"], .break-card') : null;
+    if (!el) return;
+    var id = (el.id || '').toLowerCase();
+    var label = (el.getAttribute('aria-label') || el.textContent || '').trim().toLowerCase();
+    var kind = (el.dataset && (el.dataset.kind || el.dataset.activity || el.dataset.break)) || '';
+
+    // Tab visits: screen observer handles navigation and code-driven transitions.
+    if (el.closest('nav') && el.dataset && el.dataset.screen) {
+      recordTab(el.dataset.screen);
+    }
+
+    // Task lifecycle. The task's text is deliberately never read or transmitted.
+    if (id === 'saveTask'.toLowerCase() || id === 'saveTaskBtn'.toLowerCase() ||
+        id === 'addTask'.toLowerCase() || id === 'createTask'.toLowerCase() ||
+        id === 'save-task' || id === 'taskSave') {
+      track('task_create_attempt', {source:'manual'});
+      trackedTaskAdd = true;
+      setTimeout(function(){trackedTaskAdd=false;}, 1200);
+    }
+    if (el.id === 'voiceBtn') {
+      track('voice_input_started', {feature:'task'});
+      trackedVoiceAttempt = true;
+      setTimeout(function(){trackedVoiceAttempt=false;}, 30000);
+    }
+    if (el.id === 'routineVoiceBtn') {
+      track('voice_input_started', {feature:'routine'});
+    }
+    if (el.id === 'calendarVoiceBtn') {
+      track('voice_input_started', {feature:'calendar'});
+    }
+
+    if (el.classList.contains('check')) {
+      track('task_completion', {method:'check_button'});
+    }
+    if (el.classList.contains('timer-btn') || id.indexOf('timer') !== -1 ||
+        id === 'startfocus' || id === 'starttimer') {
+      track('timer_started', {source:'task_or_timer_control'});
+      trackedTimer = true;
+    }
+    if (id === 'finishnow' || id === 'pause' && label.indexOf('finish') !== -1) {
+      track('timer_finished', {completion_type:'manual'});
+    }
+    if (id === 'returntofocus') {
+      track('timer_resumed', {source:'break'});
+    }
+    if (id === 'breakfromfocus') {
+      track('timer_paused_for_break', {});
+    }
+
+    if (id === 'saveroutine') {
+      track('routine_create_attempt', {frequency: (document.getElementById('routineFreq') || {}).value || 'unknown'});
+    }
+    if (el.dataset && el.dataset.action === 'delete' && el.closest('#routineList')) {
+      track('routine_deleted', {});
+    }
+    if (el.dataset && el.dataset.action === 'add' && el.closest('#routineList')) {
+      track('routine_added_to_today', {});
+    }
+
+    var breakKind = String(kind || '').toLowerCase();
+    if (!breakKind && el.classList.contains('break-card')) breakKind = (el.dataset.kind || '').toLowerCase();
+    if (breakKind && ['wordle','pacman','snake','doodle','walk','lofi','breathing','stretch'].indexOf(breakKind) !== -1) {
+      if (!el.classList.contains('locked')) {
+        track('break_activity_start', {activity_name:breakKind});
+        trackedBreaks[breakKind] = Date.now();
+      }
+    }
+    if (label.indexOf('backup') !== -1 && (label.indexOf('now') !== -1 || id.indexOf('backup') !== -1)) {
+      track('backup_attempt', {provider:'google_drive'});
+    }
+    if (label.indexOf('restore') !== -1 || id.indexOf('restore') !== -1) {
+      track('restore_attempt', {provider:'google_drive'});
+    }
+    if (id.indexOf('openbackup') !== -1 || label === 'manage') {
+      track('backup_settings_open', {provider:'google_drive'});
     }
   }, true);
 
-  // Track successful task completion only when the UI exposes an explicit completion control.
+  // Voice task creation: record success only when a task is visibly added, without reading its text.
+  var taskList = document.getElementById('taskList');
+  if (taskList) {
+    var taskObserver = new MutationObserver(function (mutations) {
+      var added = mutations.some(function (m) {
+        return m.addedNodes && Array.prototype.some.call(m.addedNodes, function (n) {
+          return n.nodeType === 1 && (n.classList.contains('task') || (n.querySelector && n.querySelector('.task')));
+        });
+      });
+      if (added) {
+        track('task_created', {source:trackedVoiceAttempt ? 'voice_or_quick_add' : 'task_list_update'});
+        trackedVoiceAttempt = false;
+      }
+    });
+    taskObserver.observe(taskList, {childList:true, subtree:true});
+  }
+
+  // Count task completion and routine creation only as generic actions. Change events
+  // avoid duplicate completion events from the delegated click listener where possible.
   document.addEventListener('change', function (event) {
     var el = event.target;
-    if (!el || el.type !== 'checkbox') return;
-    var label = (el.getAttribute('aria-label') || '').toLowerCase();
-    if (el.checked && (label.indexOf('complete') !== -1 || label.indexOf('task') !== -1)) {
-      track('task_completion', { method: 'checkbox' });
+    if (el && el.type === 'checkbox' && el.checked) {
+      track('task_completed', {method:'checkbox'});
     }
   }, true);
+
+  // Mark activity completion when users close a tracked activity or finish a timed break.
+  document.addEventListener('click', function (event) {
+    var el = event.target && event.target.closest ? event.target.closest('button') : null;
+    if (!el) return;
+    var id = (el.id || '').toLowerCase();
+    var label = (el.getAttribute('aria-label') || el.textContent || '').trim().toLowerCase();
+    if (id.indexOf('close') !== -1 || id.indexOf('finish') !== -1 || label.indexOf('done') !== -1) {
+      Object.keys(trackedBreaks).forEach(function (activity) {
+        if (trackedBreaks[activity]) {
+          var seconds = Math.round((Date.now() - trackedBreaks[activity]) / 1000);
+          track('break_activity_end', {activity_name:activity, duration_seconds:Math.max(0,seconds)});
+          delete trackedBreaks[activity];
+        }
+      });
+    }
+  }, true);
+
+  // Useful low-risk diagnostics without collecting personal content.
+  window.addEventListener('error', function () {
+    track('app_error', {error_type:'javascript'});
+  });
 })();
 </script>
 
