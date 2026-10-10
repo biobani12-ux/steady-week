@@ -905,8 +905,25 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 .backup-status span{display:block;font-size:13px;color:#777;line-height:1.4}
 .backup-actions{display:grid;gap:10px;margin-top:14px}
 .backup-actions button{min-height:48px}
-.backup-note{font-size:11px;color:#888;line-height:1.45;margin-top:14px}
+.backup-note{font-size:12px;color:#777;line-height:1.5;margin-top:14px}
 .backup-divider{height:1px;background:#eee;margin:18px 0}
+.google-connect-intro{position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.48);box-sizing:border-box}
+.google-connect-intro.show{display:flex}
+.google-connect-card{width:min(100%,420px);max-height:min(88dvh,760px);overflow:auto;background:var(--card,#fff);color:var(--ink,#111);border:1px solid var(--line,#e5e5e5);border-radius:24px;padding:24px;box-sizing:border-box;box-shadow:0 18px 60px #0003}
+.google-connect-mark{width:54px;height:54px;border-radius:18px;background:var(--soft,#f3f3f1);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
+.google-connect-card h3{font-size:22px;line-height:1.2;margin:0 0 9px}
+.google-connect-card p{font-size:14px;line-height:1.55;color:var(--muted,#777);margin:0 0 18px}
+.google-connect-benefits{display:grid;gap:14px;margin:20px 0}
+.google-connect-benefit{display:flex;align-items:flex-start;gap:11px;font-size:14px;line-height:1.45}
+.google-connect-benefit-icon{width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--soft,#f3f3f1);display:flex;align-items:center;justify-content:center}
+.google-connect-benefit strong{display:block;font-size:14px;margin-bottom:2px}
+.google-connect-benefit span{display:block;color:var(--muted,#777);font-size:12px}
+.google-connect-actions{display:grid;gap:9px;margin-top:20px}
+.google-connect-actions button{min-height:48px}
+.google-connect-footnote{font-size:11px!important;margin:14px 0 0!important}
+body[data-theme="dark"] .backup-status{background:#222428;border-color:#383a3f}
+body[data-theme="dark"] .backup-status span{color:#b5b5b5}
+body[data-theme="dark"] .backup-note{color:#aaa}
 .settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #eee}
 .settings-row:last-child{border-bottom:0}
 .settings-label b{display:block;font-size:15px}
@@ -1424,7 +1441,7 @@ body[data-theme="light"] #events .event .meta{
 <div class="sheet backup-sheet" id="backupSheet">
   <div class="panel">
     <div class="sheet-head"><h2>Google backup</h2><button class="close-sheet" id="closeBackup">×</button></div>
-    <div class="date" style="margin-top:4px">Optional backup for moving to another phone. Each Google account gets its own private app backup.</div>
+    <div class="date" style="margin-top:4px">Optional backup for moving to another device. Your tasks still work if you don't connect Google.</div>
     <div class="backup-status" id="backupStatus">
       <strong>Not connected</strong>
       <span>Connect Google to back up and restore your Steady Week data.</span>
@@ -1434,9 +1451,36 @@ body[data-theme="light"] #events .event .meta{
       <button class="secondary" id="googleBackup">Back up now</button>
       <button class="secondary" id="googleRestore">Restore backup</button>
     </div>
-    <div class="backup-note" id="backupNote">Your backup is stored in Google's private appDataFolder for this app. Steady Week does not read your normal Drive files, and your backup data is not sent to a Steady Week server.</div>
+    <div class="backup-note" id="backupNote">Your backup is stored in Google's private app-data area for Steady Week. The app requests access to that area, not your regular Drive documents. Your task data is not sent to a Steady Week server.</div>
     <div class="backup-divider"></div>
     <button class="link" id="googleDisconnect">Disconnect Google on this device</button>
+  </div>
+</div>
+
+<div class="google-connect-intro" id="googleConnectIntro" role="dialog" aria-modal="true" aria-labelledby="googleConnectIntroTitle" aria-describedby="googleConnectIntroDescription">
+  <div class="google-connect-card">
+    <div class="google-connect-mark" aria-hidden="true">☁️</div>
+    <h3 id="googleConnectIntroTitle">Keep your week safe</h3>
+    <p id="googleConnectIntroDescription">Connect Google Drive to save a private backup of your Steady Week data. This is optional, and your tasks keep working without it.</p>
+    <div class="google-connect-benefits">
+      <div class="google-connect-benefit">
+        <div class="google-connect-benefit-icon" aria-hidden="true">🔒</div>
+        <div><strong>A private app-data area</strong><span>Steady Week requests access to its own app-data area in Google Drive, not your regular Drive documents.</span></div>
+      </div>
+      <div class="google-connect-benefit">
+        <div class="google-connect-benefit-icon" aria-hidden="true">↔️</div>
+        <div><strong>Move your data between devices</strong><span>Back up your tasks, routines, progress, and supported settings to your Google account.</span></div>
+      </div>
+      <div class="google-connect-benefit">
+        <div class="google-connect-benefit-icon" aria-hidden="true">🛡️</div>
+        <div><strong>Local data stays on this device</strong><span>Connecting does not delete your local tasks. Restore is designed to merge backup-only items with your local data.</span></div>
+      </div>
+    </div>
+    <div class="google-connect-actions">
+      <button class="primary" id="continueGoogleConnect">Continue to Google</button>
+      <button class="secondary" id="cancelGoogleConnect">Not now</button>
+    </div>
+    <p class="google-connect-footnote" style="color:var(--muted,#777)">Next, Google will show its own permission screen. Review it before approving access.</p>
   </div>
 </div>
 
@@ -1658,81 +1702,44 @@ body[data-theme="light"] #events .event .meta{
       if(!payload || payload.schema !== GOOGLE_BACKUP_SCHEMA || payload.app !== "Steady Week" || !payload.data || typeof payload.data !== "object"){
         throw new Error("The backup file is not a valid Steady Week backup.");
       }
-      if(!confirm("Merge this Google backup with the data on this device? Existing local items will be kept. Backup-only items will be added. If the same item exists in both places, the local version wins.")) return;
-
-      // Merge app-owned data without clearing local keys. Local values win conflicts;
-      // items that exist only in the backup are added. Build every result before writing.
-      const mergeObjectsLocalWins = (localValue, backupValue) => {
-        if(Array.isArray(localValue) && Array.isArray(backupValue)){
-          const merged = localValue.slice();
-          const findMatch = item => {
-            if(item && typeof item === "object" && item.id !== undefined && item.id !== null){
-              return merged.findIndex(existing =>
-                existing && typeof existing === "object" &&
-                String(existing.id) === String(item.id) &&
-                String(existing.name ?? "") === String(item.name ?? "")
-              );
-            }
-            return -1;
-          };
-          backupValue.forEach(item => {
-            const index = findMatch(item);
-            if(index < 0) merged.push(item);
-            // Matching items are deliberately not overwritten: local version wins.
-          });
-          return merged;
-        }
-        if(localValue && backupValue &&
-           typeof localValue === "object" && typeof backupValue === "object" &&
-           !Array.isArray(localValue) && !Array.isArray(backupValue)){
-          const merged = {...localValue};
-          Object.keys(backupValue).forEach(key => {
-            if(Object.prototype.hasOwnProperty.call(localValue,key)){
-              merged[key] = mergeObjectsLocalWins(localValue[key],backupValue[key]);
-            }else{
-              merged[key] = backupValue[key];
-            }
-          });
-          return merged;
-        }
-        // For scalar conflicts, keep the current device's value.
-        return localValue === undefined ? backupValue : localValue;
-      };
-
-      const mergedValues = {};
-      Object.entries(payload.data).forEach(([key,backupRaw]) => {
-        if(!BACKUP_KEYS.includes(key) || typeof backupRaw !== "string") return;
-        const localRaw = localStorage.getItem(key);
-        if(localRaw === null){
-          mergedValues[key] = backupRaw;
-          return;
-        }
-        // Task/routine lists and progress are structured data; merge their records.
-        if(["adhdAppTasks_v1","adhdAppRoutines_v1","steadyWeekProgress_v1"].includes(key)){
-          const localParsed = JSON.parse(localRaw);
-          const backupParsed = JSON.parse(backupRaw);
-          mergedValues[key] = JSON.stringify(mergeObjectsLocalWins(localParsed,backupParsed));
-        }else{
-          // Keep existing local identity/focus values; only restore them if absent locally.
-          mergedValues[key] = localRaw;
-        }
-      });
-
-      // Apply with rollback protection so a storage error doesn't leave a half-merged restore.
-      const previousValues = {};
-      Object.keys(mergedValues).forEach(key => { previousValues[key] = localStorage.getItem(key); });
-      try{
-        Object.entries(mergedValues).forEach(([key,value]) => localStorage.setItem(key,value));
-      }catch(writeError){
-        Object.entries(previousValues).forEach(([key,value]) => {
-          try{
-            if(value === null) localStorage.removeItem(key);
-            else localStorage.setItem(key,value);
-          }catch(rollbackError){}
-        });
-        throw writeError;
+      if(!confirm("Merge this backup with your current Steady Week data? Your local tasks and routines will be kept. Backup-only items will be added. If the same item exists in both, the local version wins.")) return;
+      // Merge backup into this device. Never clear existing local Steady Week data.
+      function parseBackupJson(value){ try { return JSON.parse(value); } catch(e) { return null; } }
+      function mergeArrays(localValue, backupValue){
+        const localArray = parseBackupJson(localValue), backupArray = parseBackupJson(backupValue);
+        if(!Array.isArray(localArray) || !Array.isArray(backupArray)) return localValue;
+        const merged = localArray.slice();
+        const recordKey = item => {
+          if(item && typeof item === "object") {
+            if(item.id !== undefined && item.id !== null && String(item.id) !== "") return "id:"+String(item.id);
+            const label = item.title ?? item.text ?? item.name ?? item.task ?? item.label;
+            if(label !== undefined) return "label:"+String(label).trim().toLowerCase()+"|"+String(item.date ?? item.dueDate ?? item.scheduledDate ?? item.time ?? "");
+          }
+          return "json:"+JSON.stringify(item);
+        };
+        const known = new Set(merged.map(recordKey));
+        backupArray.forEach(item => { const k=recordKey(item); if(!known.has(k)){ merged.push(item); known.add(k); } });
+        return JSON.stringify(merged);
       }
-      updateBackupStatus("Merged","Backup-only items were added. Existing local data was preserved. Reloading Steady Week…");
+      function mergeHistory(localValue, backupValue){
+        const localObj=parseBackupJson(localValue), backupObj=parseBackupJson(backupValue);
+        if(!localObj || typeof localObj!=="object" || Array.isArray(localObj) || !backupObj || typeof backupObj!=="object" || Array.isArray(backupObj)) return localValue;
+        // Keep existing local entries on conflicts; fill only missing keys from backup.
+        return JSON.stringify({...backupObj,...localObj});
+      }
+      Object.entries(payload.data).forEach(([key,backupValue])=>{
+        if(!BACKUP_KEYS.includes(key) || typeof backupValue!=="string") return;
+        const localValue=localStorage.getItem(key);
+        if(localValue===null){ localStorage.setItem(key,backupValue); return; }
+        if(key==="adhdAppTasks_v1" || key==="adhdAppRoutines_v1"){
+          localStorage.setItem(key,mergeArrays(localValue,backupValue));
+        } else if(key==="steadyWeekProgress_v1"){
+          localStorage.setItem(key,mergeHistory(localValue,backupValue));
+        }
+        // For name and paused focus, preserve whatever is already on this device.
+      });
+      updateBackupStatus("Merged","Your local data was kept and backup-only items were added. Reloading Steady Week…");
+      showToast("Backup merged with local data");
       setTimeout(()=>location.reload(),700);
     }catch(error){
       updateBackupStatus("Restore failed",error.message);
@@ -1802,7 +1809,33 @@ body[data-theme="light"] #events .event .meta{
       }
     });
     $("closeBackup")?.addEventListener("click",()=>$("backupSheet").classList.remove("show"));
-    $("googleConnect")?.addEventListener("click",connectGoogle);
+    $("googleConnect")?.addEventListener("click",()=>{
+      const intro = $("googleConnectIntro");
+      if(intro){
+        intro.classList.add("show");
+        intro.setAttribute("aria-hidden","false");
+        $("cancelGoogleConnect")?.focus();
+      }else{
+        connectGoogle();
+      }
+    });
+    $("continueGoogleConnect")?.addEventListener("click",()=>{
+      $("googleConnectIntro")?.classList.remove("show");
+      $("googleConnectIntro")?.setAttribute("aria-hidden","true");
+      connectGoogle();
+    });
+    $("cancelGoogleConnect")?.addEventListener("click",()=>{
+      $("googleConnectIntro")?.classList.remove("show");
+      $("googleConnectIntro")?.setAttribute("aria-hidden","true");
+      $("googleConnect")?.focus();
+    });
+    $("googleConnectIntro")?.addEventListener("click",event=>{
+      if(event.target === $("googleConnectIntro")){
+        $("googleConnectIntro").classList.remove("show");
+        $("googleConnectIntro").setAttribute("aria-hidden","true");
+        $("googleConnect")?.focus();
+      }
+    });
     $("googleBackup")?.addEventListener("click",backupToGoogle);
     $("googleRestore")?.addEventListener("click",restoreFromGoogle);
     $("googleDisconnect")?.addEventListener("click",disconnectGoogle);
