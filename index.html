@@ -1393,7 +1393,7 @@ body[data-theme="light"] #events .event .meta{
     </div>
   </section>
 
-  <div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><div class="welcome-kicker">LET'S MAKE TODAY EASIER</div><h2>What should I call you?</h2><p>Your name is saved on this device so you won't have to enter it again.</p><input id="userNameInput" autocomplete="given-name" placeholder="Your first name"><button class="primary" id="saveUserName">Continue</button></div></div>
+  <div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><div class="welcome-kicker">LET'S MAKE TODAY EASIER</div><h2 id="nameDialogTitle">What should I call you?</h2><p id="nameDialogHelp">Your name is saved on this device so you won't have to enter it again.</p><input id="userNameInput" autocomplete="given-name" placeholder="Your first name" maxlength="60"><button class="primary" id="saveUserName">Continue</button><button type="button" id="cancelNameEdit" class="secondary" style="display:none;width:100%;margin-top:8px">Cancel</button></div></div>
 
 <nav>
     <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Today</button>
