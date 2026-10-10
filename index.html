@@ -1658,13 +1658,81 @@ body[data-theme="light"] #events .event .meta{
       if(!payload || payload.schema !== GOOGLE_BACKUP_SCHEMA || payload.app !== "Steady Week" || !payload.data || typeof payload.data !== "object"){
         throw new Error("The backup file is not a valid Steady Week backup.");
       }
-      if(!confirm("Restore this backup? Your current local Steady Week data will be replaced.")) return;
-      // Replace only the app-owned backup keys. This never touches unrelated localStorage.
-      BACKUP_KEYS.forEach(key => localStorage.removeItem(key));
-      Object.entries(payload.data).forEach(([key,value]) => {
-        if(BACKUP_KEYS.includes(key) && typeof value === "string") localStorage.setItem(key,value);
+      if(!confirm("Merge this Google backup with the data on this device? Existing local items will be kept. Backup-only items will be added. If the same item exists in both places, the local version wins.")) return;
+
+      // Merge app-owned data without clearing local keys. Local values win conflicts;
+      // items that exist only in the backup are added. Build every result before writing.
+      const mergeObjectsLocalWins = (localValue, backupValue) => {
+        if(Array.isArray(localValue) && Array.isArray(backupValue)){
+          const merged = localValue.slice();
+          const findMatch = item => {
+            if(item && typeof item === "object" && item.id !== undefined && item.id !== null){
+              return merged.findIndex(existing =>
+                existing && typeof existing === "object" &&
+                String(existing.id) === String(item.id) &&
+                String(existing.name ?? "") === String(item.name ?? "")
+              );
+            }
+            return -1;
+          };
+          backupValue.forEach(item => {
+            const index = findMatch(item);
+            if(index < 0) merged.push(item);
+            // Matching items are deliberately not overwritten: local version wins.
+          });
+          return merged;
+        }
+        if(localValue && backupValue &&
+           typeof localValue === "object" && typeof backupValue === "object" &&
+           !Array.isArray(localValue) && !Array.isArray(backupValue)){
+          const merged = {...localValue};
+          Object.keys(backupValue).forEach(key => {
+            if(Object.prototype.hasOwnProperty.call(localValue,key)){
+              merged[key] = mergeObjectsLocalWins(localValue[key],backupValue[key]);
+            }else{
+              merged[key] = backupValue[key];
+            }
+          });
+          return merged;
+        }
+        // For scalar conflicts, keep the current device's value.
+        return localValue === undefined ? backupValue : localValue;
+      };
+
+      const mergedValues = {};
+      Object.entries(payload.data).forEach(([key,backupRaw]) => {
+        if(!BACKUP_KEYS.includes(key) || typeof backupRaw !== "string") return;
+        const localRaw = localStorage.getItem(key);
+        if(localRaw === null){
+          mergedValues[key] = backupRaw;
+          return;
+        }
+        // Task/routine lists and progress are structured data; merge their records.
+        if(["adhdAppTasks_v1","adhdAppRoutines_v1","steadyWeekProgress_v1"].includes(key)){
+          const localParsed = JSON.parse(localRaw);
+          const backupParsed = JSON.parse(backupRaw);
+          mergedValues[key] = JSON.stringify(mergeObjectsLocalWins(localParsed,backupParsed));
+        }else{
+          // Keep existing local identity/focus values; only restore them if absent locally.
+          mergedValues[key] = localRaw;
+        }
       });
-      updateBackupStatus("Restored","Your backup has been restored. Reloading Steady Week…");
+
+      // Apply with rollback protection so a storage error doesn't leave a half-merged restore.
+      const previousValues = {};
+      Object.keys(mergedValues).forEach(key => { previousValues[key] = localStorage.getItem(key); });
+      try{
+        Object.entries(mergedValues).forEach(([key,value]) => localStorage.setItem(key,value));
+      }catch(writeError){
+        Object.entries(previousValues).forEach(([key,value]) => {
+          try{
+            if(value === null) localStorage.removeItem(key);
+            else localStorage.setItem(key,value);
+          }catch(rollbackError){}
+        });
+        throw writeError;
+      }
+      updateBackupStatus("Merged","Backup-only items were added. Existing local data was preserved. Reloading Steady Week…");
       setTimeout(()=>location.reload(),700);
     }catch(error){
       updateBackupStatus("Restore failed",error.message);
