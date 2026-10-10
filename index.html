@@ -3235,7 +3235,18 @@ function saveTasks(){
     $("routineList").querySelectorAll("button").forEach(b=>b.onclick=()=>{
       const r=routines.find(x=>String(x.id)===String(b.dataset.id)); if(!r)return;
       if(b.dataset.action==="delete"){
-        routines=routines.filter(x=>String(x.id)!==String(r.id)); saveRoutines(); renderRoutines(filter); showToast("Routine deleted."); return;
+        // Delete the routine definition and every generated occurrence linked to it.
+        // Do not delete manual tasks merely because their title matches the routine.
+        const deletedRoutineId = String(r.id);
+        routines = routines.filter(x => String(x.id) !== deletedRoutineId);
+        tasks = tasks.filter(t => String(t.routineId || "") !== deletedRoutineId);
+        saveRoutines();
+        saveTasks();
+        renderRoutines(filter);
+        renderTasks();
+        renderCalendar();
+        showToast("Routine and its scheduled occurrences deleted.");
+        return;
       }
       const today = todayISO();
       // Only an unfinished occurrence blocks another add. Completed occurrences
