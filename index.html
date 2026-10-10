@@ -596,6 +596,10 @@ body[data-theme="dark"] .welcome-card input::placeholder{color:#a7abb4}
 body[data-theme="dark"] .welcome-card #saveUserName{background:#f3f3f3;color:#111}
 body[data-theme="dark"] .welcome-card #cancelNameEdit{background:transparent;color:#f3f3f3;border-color:#50535a}
 
+
+  .calendar-task-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .calendar-task-action{font-size:13px;padding:8px 12px;min-height:36px;border-radius:10px}
+  body[data-theme="dark"] #events .calendar-task-action{border:1px solid #45474d}
 </style>
 
 <style>
@@ -3364,19 +3368,62 @@ function saveTasks(){
     }
     const selectedTasks=tasks.filter(t=>(t.taskDate||"")===calendarSelected);
     const selectedEvents=events.filter(e=>e.date===calendarSelected);
-    const items=[...selectedTasks.map(t=>({name:t.name,date:t.taskDate,time:t.when?formatTime(t.when):"Any time",repeat:t.repeat||"Does not repeat",done:t.done})),...selectedEvents.map(e=>({name:e.name,date:e.date,time:e.time||"Any time",repeat:e.repeat||"Does not repeat",done:false}))];
     $("selectedDateLabel").textContent=new Date(calendarSelected+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
-    $("events").innerHTML=items.length?items.map(e=>`<div class="event"><b>${escapeHtml(e.name)}</b><br><span class="meta">${e.time} · ${e.repeat}${e.done?" · Completed":""}</span></div>`).join(""):'<div class="event" style="color:#777">Nothing scheduled for this day.</div>';
+    const eventsEl=$("events");
+    eventsEl.innerHTML="";
+    if(!selectedTasks.length && !selectedEvents.length){
+      eventsEl.innerHTML='<div class="event" style="color:#777">Nothing scheduled for this day.</div>';
+      return;
+    }
+    selectedTasks.forEach(task=>{
+      const card=document.createElement("div"); card.className="event calendar-task-card";
+      const title=document.createElement("b"); title.textContent=task.name||"Untitled task"; card.appendChild(title);
+      const meta=document.createElement("div"); meta.className="meta"; meta.textContent=(task.when?formatTime(task.when):"Any time")+" · "+(task.repeat||"Does not repeat")+(task.done?" · Completed":""); card.appendChild(meta);
+      const actions=document.createElement("div"); actions.className="calendar-task-actions";
+      const edit=document.createElement("button"); edit.type="button"; edit.className="secondary calendar-task-action"; edit.textContent="Edit"; edit.setAttribute("aria-label","Edit "+(task.name||"task")); edit.onclick=()=>openModify(task); actions.appendChild(edit);
+      const cancel=document.createElement("button"); cancel.type="button"; cancel.className="danger calendar-task-action"; cancel.textContent="Cancel task"; cancel.setAttribute("aria-label","Cancel "+(task.name||"task"));
+      cancel.onclick=()=>{
+        if(!confirm("Cancel this task?")) return;
+        const routine=getRecurringRoutineForTask(task);
+        const occurrenceDate=task.routineDate||task.taskDate||calendarSelected;
+        if(routine){
+          routine.skipDates=Array.isArray(routine.skipDates)?routine.skipDates:[];
+          if(!routine.skipDates.includes(occurrenceDate)) routine.skipDates.push(occurrenceDate);
+        }
+        const index=tasks.indexOf(task); if(index>-1) tasks.splice(index,1);
+        saveTasks(); if(routine) saveRoutines();
+        renderTasks(); renderCalendar();
+        showToast("Task cancelled.");
+      };
+      actions.appendChild(cancel); card.appendChild(actions); eventsEl.appendChild(card);
+    });
+    selectedEvents.forEach(event=>{
+      const card=document.createElement("div"); card.className="event calendar-task-card";
+      const title=document.createElement("b"); title.textContent=event.name||"Untitled event"; card.appendChild(title);
+      const meta=document.createElement("div"); meta.className="meta"; meta.textContent=(event.time||"Any time")+" · "+(event.repeat||"Does not repeat"); card.appendChild(meta);
+      const actions=document.createElement("div"); actions.className="calendar-task-actions";
+      const edit=document.createElement("button"); edit.type="button"; edit.className="secondary calendar-task-action"; edit.textContent="Edit"; edit.onclick=()=>{
+        $("calTask").value=event.name||""; $("calDate").value=event.date||calendarSelected; $("calTime").value=event.time||""; $("calRepeat").value=event.repeat||"Does not repeat";
+        const eventIndex=events.indexOf(event); calendarEditingEventIndex=eventIndex; $("saveCalendar").textContent="Save changes"; $("calendarSheet").classList.add("show");
+      }; actions.appendChild(edit);
+      const cancel=document.createElement("button"); cancel.type="button"; cancel.className="danger calendar-task-action"; cancel.textContent="Cancel event"; cancel.onclick=()=>{
+        if(!confirm("Cancel this calendar event?")) return;
+        const index=events.indexOf(event); if(index>-1) events.splice(index,1); renderCalendar(); showToast("Event cancelled.");
+      }; actions.appendChild(cancel); card.appendChild(actions); eventsEl.appendChild(card);
+    });
   }
   $("prevMonth").onclick=()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);calendarSelected=isoDate(calendarCursor);renderCalendar();};
   $("nextMonth").onclick=()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);calendarSelected=isoDate(calendarCursor);renderCalendar();};
-  $("calendarAdd").onclick=()=>$("calendarSheet").classList.add("show");
-  $("cancelCalendar").onclick=()=>$("calendarSheet").classList.remove("show");
+  let calendarEditingEventIndex = null;
+  function resetCalendarEditor(){ calendarEditingEventIndex=null; $("saveCalendar").textContent="Schedule"; }
+  $("calendarAdd").onclick=()=>{resetCalendarEditor(); $("calTask").value=""; $("calDate").value=calendarSelected; $("calTime").value=""; $("calRepeat").value="Does not repeat"; $("calendarSheet").classList.add("show");};
+  $("cancelCalendar").onclick=()=>{$("calendarSheet").classList.remove("show");resetCalendarEditor();};
   $("saveCalendar").onclick=()=>{
     const name=$("calTask").value.trim();if(!name){showToast("Add a task name first.");return}
-    events.push({name,date:$("calDate").value||"Unspecified date",time:$("calTime").value,repeat:$("calRepeat").value});
-    $("calendarSheet").classList.remove("show");renderCalendar();showToast("Scheduled.");
-    $("calTask").value="";
+    const record={name,date:$("calDate").value||"Unspecified date",time:$("calTime").value,repeat:$("calRepeat").value};
+    if(calendarEditingEventIndex!==null && events[calendarEditingEventIndex]){events[calendarEditingEventIndex]=record;showToast("Event updated.");}
+    else {events.push(record);showToast("Scheduled.");}
+    $("calendarSheet").classList.remove("show");resetCalendarEditor();renderCalendar();$("calTask").value="";
   };
   const WORDLE_WORDS=[
     "apple","brave","cabin","candy","chair","charm","clean","cloud","dance","dream",
