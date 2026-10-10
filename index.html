@@ -580,6 +580,22 @@ body[data-theme="dark"] #routines .choice.selected{
 }
 
 #cancelNameEdit{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px}
+
+/* v43: Keep the onboarding/name editor controls present and readable in both themes. */
+.welcome-card{color:#111;background:#fff}
+.welcome-card h2{color:#111}
+.welcome-card p{color:#686868}
+.welcome-card input{box-sizing:border-box;width:100%;min-height:56px;padding:14px 16px;border:1px solid #d7d7d7;border-radius:14px;background:#fff;color:#111;outline-offset:3px}
+.welcome-card #saveUserName{width:100%;min-height:56px;margin-top:10px}
+.welcome-card #cancelNameEdit{min-height:52px}
+body[data-theme="dark"] .welcome-card{background:#1c1d20;color:#f3f3f3;border:1px solid #383a3f}
+body[data-theme="dark"] .welcome-card h2{color:#f5f5f5}
+body[data-theme="dark"] .welcome-card p,body[data-theme="dark"] .welcome-kicker{color:#b8bbc2}
+body[data-theme="dark"] .welcome-card input{background:#292b30;color:#f5f5f5;border-color:#50535a}
+body[data-theme="dark"] .welcome-card input::placeholder{color:#a7abb4}
+body[data-theme="dark"] .welcome-card #saveUserName{background:#f3f3f3;color:#111}
+body[data-theme="dark"] .welcome-card #cancelNameEdit{background:transparent;color:#f3f3f3;border-color:#50535a}
+
 </style>
 
 <style>
@@ -1404,7 +1420,7 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
     </div>
   </section>
 
-  <div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><div class="welcome-kicker">LET'S MAKE TODAY EASIER</div><h2>What should I call you?</h2><p>Your name is saved on this device so you won't have to enter it again.</p><input id="userNameInput" autocomplete="given-name" placeholder="Your first name"><button class="primary" id="saveUserName">Continue</button></div></div>
+  <div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><div class="welcome-kicker">LET'S MAKE TODAY EASIER</div><h2 id="nameDialogTitle">What should I call you?</h2><p id="nameDialogHelp">Your name is saved on this device so you won't have to enter it again.</p><input id="userNameInput" autocomplete="given-name" placeholder="Your first name" aria-label="Your name"><button class="primary" id="saveUserName" type="button">Continue</button><button id="cancelNameEdit" type="button" style="display:none;width:100%;margin-top:10px">Cancel</button></div></div>
 
 <nav>
     <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Today</button>
