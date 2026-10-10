@@ -1258,42 +1258,13 @@ body[data-theme="light"] #events .event .meta{
   </script>
 
 <style id="name-sheet-dark-theme-fix">
-/* Narrow, component-only fix: keep the existing sheet layout and app behavior intact. */
-body[data-theme="dark"] #nameSheet .panel {
-  background: #1c1d20 !important;
-  color: #f3f3f3 !important;
-  border-color: #383a3f !important;
-}
-body[data-theme="dark"] #nameSheet h2,
-body[data-theme="dark"] #nameSheet label {
-  color: #f3f3f3 !important;
-}
-body[data-theme="dark"] #nameSheet #changeNameInput {
-  background: #292b30 !important;
-  color: #f7f7f7 !important;
-  -webkit-text-fill-color: #f7f7f7 !important;
-  border: 1px solid #555861 !important;
-  caret-color: #1683f8;
-}
-body[data-theme="dark"] #nameSheet #changeNameInput::placeholder {
-  color: #a7abb4 !important;
-  opacity: 1;
-}
-body[data-theme="dark"] #nameSheet #changeNameInput:focus {
-  outline: 2px solid #1683f8;
-  outline-offset: 1px;
-}
-body[data-theme="dark"] #nameSheet #saveChangedName {
-  background: #f3f3f3 !important;
-  color: #111214 !important;
-  border-color: #f3f3f3 !important;
-}
-body[data-theme="dark"] #nameSheet #cancelChangedName,
-body[data-theme="dark"] #nameSheet #closeNameSheet {
-  background: #292b30 !important;
-  color: #f3f3f3 !important;
-  border-color: #555861 !important;
-}
+body[data-theme="dark"] #nameSheet .panel { background:#1c1d20 !important; color:#f3f3f3 !important; border-color:#383a3f !important; }
+body[data-theme="dark"] #nameSheet h2, body[data-theme="dark"] #nameSheet label, body[data-theme="dark"] #nameSheet p, body[data-theme="dark"] #nameSheet .sheet-head { color:#f3f3f3 !important; }
+body[data-theme="dark"] #nameSheet #changeNameInput { background:#292b30 !important; color:#f7f7f7 !important; -webkit-text-fill-color:#f7f7f7 !important; border:1px solid #555861 !important; caret-color:#1683f8; }
+body[data-theme="dark"] #nameSheet #changeNameInput::placeholder { color:#a7abb4 !important; opacity:1; }
+body[data-theme="dark"] #nameSheet #changeNameInput:focus { outline:2px solid #1683f8; outline-offset:1px; }
+body[data-theme="dark"] #nameSheet #saveChangedName { background:#f3f3f3 !important; color:#111214 !important; border-color:#f3f3f3 !important; }
+body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #nameSheet #closeNameSheet { background:#292b30 !important; color:#f3f3f3 !important; border-color:#555861 !important; }
 </style>
 
 </head>
@@ -2031,7 +2002,13 @@ function loadTasks(){
   return defaultTasks;
 }
 
-let tasks = loadTasks();
+let tasks = loadTasks().filter(t => t && typeof t === "object" && (typeof t.name === "string" || t.name == null)).map(t => ({
+  ...t,
+  name: String(t.name || "Untitled task"),
+  duration: Math.max(1, Number(t.duration) || 15),
+  done: t.done === true,
+  taskDate: typeof t.taskDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(t.taskDate) ? t.taskDate : todayISO()
+}));
 
 function saveTasks(){
   try{
@@ -2053,7 +2030,7 @@ function saveTasks(){
     try{const saved=localStorage.getItem(ROUTINES_KEY);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))return parsed;}}catch(e){}
     return defaultRoutines;
   }
-  let routines = loadRoutines().filter(r=>["Daily","Weekly","Biweekly","Monthly"].includes(r.freq));
+  let routines = loadRoutines().filter(r=>r && typeof r === "object" && ["Daily","Weekly","Biweekly","Monthly"].includes(r.freq)).map(r=>({...r,name:String(r.name||"Untitled routine"),duration:Math.max(1,Number(r.duration)||15)}));
   function saveRoutines(){try{localStorage.setItem(ROUTINES_KEY,JSON.stringify(routines));}catch(e){console.warn("Could not save routines",e);}}
 
   function routineIsDueOn(routine, dateISO){
@@ -2530,9 +2507,10 @@ function saveTasks(){
   },true);
 
   function renderTasks(){
-    syncRoutineTasksForDate(todayISO());
-    rollPendingTasksForward();
-    const box=$("taskList"); box.innerHTML="";
+    // Isolate recurring-task maintenance so one malformed old record cannot blank the Today screen.
+    try { syncRoutineTasksForDate(todayISO()); } catch(error) { console.error("Routine sync skipped:", error); }
+    try { rollPendingTasksForward(); } catch(error) { console.error("Task rollover skipped:", error); }
+    const box=$("taskList"); if(!box) return; box.innerHTML="";
     const today=todayISO();
     const todayList=tasks.filter(t => (t.taskDate || today) === today);
     const sorted=[...todayList].sort((a,b)=>taskDateTimeKey(a).localeCompare(taskDateTimeKey(b)));
@@ -3286,6 +3264,8 @@ function saveTasks(){
   let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let calendarSelected = todayISO();
   function renderCalendar(){
+    if(!(calendarCursor instanceof Date) || Number.isNaN(calendarCursor.getTime())) calendarCursor=new Date();
+    if(typeof calendarSelected !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(calendarSelected)) calendarSelected=todayISO();
     const d=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
     $("monthTitle").textContent=d.toLocaleDateString(undefined,{month:"long",year:"numeric"});
     const first=d.getDay(), days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
@@ -3295,9 +3275,12 @@ function saveTasks(){
     // task records and therefore visible in both Today (when due) and Calendar.
     for(let day=1; day<=days; day++){
       const dateISO=isoDate(new Date(d.getFullYear(),d.getMonth(),day));
-      syncRoutineTasksForDate(dateISO);
+      // Calendar dates must render even if an old routine record is malformed.
+      try { syncRoutineTasksForDate(dateISO); } catch(error) { console.error("Calendar routine sync skipped for", dateISO, error); }
     }
-    $("dates").innerHTML="";
+    const datesEl=$("dates");
+    if(!datesEl) return;
+    datesEl.innerHTML="";
     for(let i=0;i<first;i++)$("dates").appendChild(document.createElement("div"));
     for(let n=1;n<=days;n++){
       const date=isoDate(new Date(d.getFullYear(),d.getMonth(),n));
