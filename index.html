@@ -472,6 +472,113 @@
 
 .stretch-sheet{text-align:center;padding:24px 20px}.stretch-kicker{font-size:13px;letter-spacing:.08em;color:#888;text-transform:uppercase}.stretch-title{font-size:38px;font-weight:800;margin:4px 0}.stretch-subtitle{font-size:18px;color:#777;margin:0 0 10px}.stretch-name{font-size:27px;font-weight:800;margin:2px 0 6px}.stretch-instruction{font-size:17px;line-height:1.4;color:#666;max-width:520px;margin:0 auto;min-height:48px}.stretch-time{font-size:52px;font-variant-numeric:tabular-nums;margin:10px 0}.stretch-progress{height:5px;background:#e8e8e8;border-radius:9px;overflow:hidden;margin:0 8px 14px}.stretch-progress>div{height:100%;background:#111}.stretch-next{font-size:14px;color:#888;margin-bottom:16px}.stretch-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stretch-controls button{min-height:52px;border:1px solid #ddd;border-radius:18px;background:#f2f2f2;font-size:17px}.stretch-controls .end{background:#111;color:#fff;border-color:#111}.stretch-complete{text-align:center;padding:70px 20px}.stretch-complete h2{font-size:34px;margin:0 0 10px}.stretch-complete p{font-size:18px;color:#777}.stretch-complete button{padding:14px 28px;border:0;border-radius:18px;background:#111;color:#fff;font-size:17px}
 
+
+/* v36: Bring Break and Routines into the same dark-card visual language as Calendar. */
+body[data-theme="dark"] #break .break-return{
+  background:#1c1d20!important;color:var(--ink)!important;
+  border:1px solid var(--line);box-shadow:none;text-align:left;
+  border-radius:18px;padding:16px 17px;
+}
+body[data-theme="dark"] #break .break-return.waiting{
+  background:#1c1d20!important;color:var(--ink)!important;
+}
+body[data-theme="dark"] #break .break-return span{color:var(--muted);opacity:1;display:block;line-height:1.45;margin-top:4px}
+body[data-theme="dark"] #break .break-return .primary{
+  background:#f3f3f3!important;color:#111!important;border-radius:12px;
+}
+#break .break-section-title{
+  margin:22px 2px 12px;font-size:20px;letter-spacing:-.35px;
+}
+#break .break-grid{
+  gap:10px;padding:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:20px;
+}
+#break .break-card{
+  min-height:138px;padding:19px 12px 15px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0;position:relative;
+  transition:transform .15s ease,border-color .15s ease;
+}
+#break .break-card:active{transform:scale(.985)}
+#break .break-icon{width:34px;height:34px;margin:0 auto 5px;color:#1683f8}
+#break .break-icon svg{width:30px;height:30px}
+#break .break-card b{font-size:16px;line-height:1.25;margin-top:7px}
+#break .break-card span{font-size:12px;margin-top:6px}
+body[data-theme="dark"] #break .break-card{
+  background:#222428!important;color:#f3f3f3!important;
+  border:1px solid #383a3f!important;border-radius:17px;
+  box-shadow:0 3px 10px rgba(0,0,0,.12);
+}
+body[data-theme="dark"] #break .break-card span{color:#a7abb4}
+body[data-theme="dark"] #break .break-card.locked{opacity:.55}
+body[data-theme="dark"] #break .break-card.locked:after{color:#b9bdc5}
+#break .relax-heading{margin-top:25px}
+#routines .content{padding-top:10px}
+#routines #routineFilter{gap:8px;margin:0 0 14px}
+#routines .choice{min-height:46px;padding:10px 7px;border-radius:14px;font-size:14px}
+#routines #routineList{margin-top:4px}
+#routines .routine{
+  display:flex;align-items:center;gap:12px;
+  padding:15px;margin:10px 0;border-radius:18px;min-height:82px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink);
+  box-shadow:0 2px 8px rgba(0,0,0,.035);
+}
+#routines .routine .routine-actions{margin-left:auto;display:flex;align-items:center;gap:7px;flex-shrink:0}
+#routines .routine .routine-actions button,
+#routines .routine>button{
+  width:38px;height:38px;min-width:38px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  margin:0;border:1px solid var(--line);background:var(--soft);color:var(--ink);
+}
+#routines .routine .routine-actions button.add,
+#routines .routine .routine-actions button:first-child{
+  background:var(--ink);color:var(--bg);border-color:var(--ink);
+}
+#routines .routine .routine-actions button:last-child:not(.add){
+  background:transparent;color:var(--muted);
+}
+#routines .routine-empty{
+  background:var(--card);border:1px dashed var(--line);border-radius:18px;
+  margin-top:12px;padding:28px 18px;color:var(--muted);line-height:1.5;
+}
+body[data-theme="dark"] #routines .routine{
+  background:#1c1d20!important;color:#f3f3f3!important;
+  border-color:#383a3f!important;box-shadow:none;
+}
+body[data-theme="dark"] #routines .routine .meta,
+body[data-theme="dark"] #routines .routine small{color:#a7abb4!important}
+body[data-theme="dark"] #routines .routine .routine-actions button,
+body[data-theme="dark"] #routines .routine>button{
+  background:#222428;color:#f3f3f3;border-color:#45474d;
+}
+body[data-theme="dark"] #routines .routine .routine-actions button.add,
+body[data-theme="dark"] #routines .routine .routine-actions button:first-child{
+  background:#f3f3f3!important;color:#111!important;border-color:#f3f3f3!important;
+}
+body[data-theme="dark"] #routines .routine-empty{
+  background:#1c1d20;color:#a7abb4;border-color:#383a3f;
+}
+body[data-theme="dark"] #routines .quick-voice-mini{
+  background:#050506;border:1px solid #282a2e;
+}
+body[data-theme="dark"] #routines .mini-voice-input{
+  background:#24262a!important;color:#f3f3f3!important;border-color:#45474d!important;
+}
+body[data-theme="dark"] #routines .mini-mic{background:#f3f3f3;color:#111}
+body[data-theme="dark"] #routines .choice{
+  background:#1c1d20;color:#1683f8;border-color:#383a3f;
+}
+body[data-theme="dark"] #routines .choice.selected{
+  background:#f3f3f3;color:#111;border-color:#f3f3f3;
+}
+@media(max-width:360px){
+  #break .break-grid{gap:8px;padding:8px}
+  #break .break-card{min-height:126px;padding:15px 8px}
+  #routines .choice{font-size:12px;padding:9px 4px}
+  #routines .routine{gap:8px;padding:12px}
+  #routines .routine .routine-actions{gap:4px}
+  #routines .routine .routine-actions button{width:34px;height:34px;min-width:34px}
+}
+
 </style>
 
 <style>
