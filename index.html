@@ -3238,21 +3238,47 @@ function saveTasks(){
         routines=routines.filter(x=>String(x.id)!==String(r.id)); saveRoutines(); renderRoutines(filter); showToast("Routine deleted."); return;
       }
       const today = todayISO();
-      if(r.ended){
-        showToast("This routine has ended. Create a new routine to restart it.");
+      // Only an unfinished occurrence blocks another add. Completed occurrences
+      // remain in history and the user may deliberately do the routine again.
+      const activeOccurrence = tasks.find(t =>
+        String(t.routineId || "") === String(r.id) &&
+        t.routineDate === today && !t.done &&
+        (t.taskDate || today) === today
+      );
+      if(activeOccurrence){
+        showToast("This routine is already on Today.");
         return;
       }
-      const existing = tasks.some(t => String(t.routineId || "") === String(r.id) && t.routineDate === today);
-      if(existing){
-        showToast("This routine is already scheduled for today.");
+
+      const due = routineIsDueOn(r, today);
+      const hasCompletedOccurrence = tasks.some(t =>
+        String(t.routineId || "") === String(r.id) &&
+        t.routineDate === today && t.done
+      );
+
+      // An explicit + click creates one task instance for today only when the
+      // routine is ended, not due, skipped, or already completed today. It never
+      // reactivates the recurring definition or changes its schedule.
+      if(r.ended || !due || hasCompletedOccurrence){
+        tasks.push({
+          id:Date.now() + Math.floor(Math.random()*100000),
+          name:r.name,
+          when:r.when || "",
+          duration:Number(r.duration)||15,
+          done:false,
+          repeat:"Does not repeat",
+          taskDate:today,
+          manualRoutineAdd:true,
+          sourceRoutineId:r.id
+        });
+        saveTasks();
+        renderTasks();
+        showToast(hasCompletedOccurrence ? "Added another task for today." : "Added to Today once.");
         return;
       }
-      if(!routineIsDueOn(r, today)){
-        // The plus button is an explicit one-off add, even on a non-scheduled day.
-        tasks.push({id:Date.now(),name:r.name,duration:Number(r.duration),done:false,taskDate:today,routineId:r.id,routineDate:today});
-        saveTasks();renderTasks();showToast("Added to Today once.");
-        return;
-      }
+
+      // For a due, active routine with no existing occurrence, generate its
+      // normal recurring occurrence. The sync helper enforces one per date.
       syncRoutineTasksForDate(today);
       renderTasks();
       showToast("Routine scheduled for today.");
