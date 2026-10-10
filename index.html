@@ -1135,6 +1135,19 @@ body[data-theme="light"] #events .event .meta{
 @media(min-width:700px){.arcade-overlay{align-items:center}.arcade-panel{min-height:0;height:min(94dvh,900px);border-radius:24px;overflow:auto}.arcade-controls button{width:58px}}
 </style>
 
+
+  <!-- Google Analytics 4: Steady Week -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QTKXJQZ57B"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QTKXJQZ57B', { send_page_view: true });
+    // Privacy-conscious product analytics: never send task names, notes, or voice transcripts.
+    window.steadyWeekTrack = function(eventName, params) {
+      if (typeof window.gtag === 'function') window.gtag('event', eventName, params || {});
+    };
+  </script>
 </head>
 <body>
 <div class="app">
@@ -4141,6 +4154,63 @@ document.addEventListener("click",function(e){
   document.addEventListener("keydown",e=>{if(!overlay.classList.contains("show"))return;const map={ArrowUp:"up",w:"up",ArrowDown:"down",s:"down",ArrowLeft:"left",a:"left",ArrowRight:"right",d:"right"};if(map[e.key]){e.preventDefault();setDirection(map[e.key]);}if(e.key==="Escape")close();if(e.key===" "){e.preventDefault();paused=!paused;$("pauseArcade").textContent=paused?"Resume":"Pause";updateStats();}});
   canvas.addEventListener("touchstart",e=>{const t=e.changedTouches[0];touchStart={x:t.clientX,y:t.clientY};},{passive:true});
   canvas.addEventListener("touchend",e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>18)setDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"));touchStart=null;},{passive:true});
+})();
+</script>
+
+
+<script>
+/* Steady Week GA4 interaction events. Only generic feature names are sent. */
+(function () {
+  if (window.__steadyWeekAnalyticsBound) return;
+  window.__steadyWeekAnalyticsBound = true;
+
+  function track(name, params) {
+    if (typeof window.steadyWeekTrack === 'function') {
+      window.steadyWeekTrack(name, params || {});
+    }
+  }
+
+  // Track navigation tabs using visible labels/IDs only, never task content.
+  document.addEventListener('click', function (event) {
+    var el = event.target && event.target.closest ? event.target.closest('button, a, [role="tab"]') : null;
+    if (!el) return;
+
+    var id = (el.id || '').toLowerCase();
+    var label = (el.getAttribute('aria-label') || el.textContent || '').trim().toLowerCase();
+    var tabMap = [
+      ['today', 'today'], ['routine', 'routines'], ['calendar', 'calendar'],
+      ['progress', 'progress'], ['break', 'break']
+    ];
+    for (var i = 0; i < tabMap.length; i++) {
+      if (id.indexOf(tabMap[i][0]) !== -1 || label === tabMap[i][0] || label.indexOf(tabMap[i][0]) === 0) {
+        track('tab_view', { tab_name: tabMap[i][1] });
+        break;
+      }
+    }
+
+    if (id.indexOf('timer') !== -1 && /start|begin/i.test(label)) {
+      track('timer_start', { source: 'button' });
+    }
+    if (id.indexOf('wordle') !== -1 || label.indexOf('wordle') !== -1) {
+      track('break_activity_start', { activity_name: 'wordle' });
+    } else if (label.indexOf('breath') !== -1) {
+      track('break_activity_start', { activity_name: 'breathing' });
+    } else if (label.indexOf('doodle') !== -1) {
+      track('break_activity_start', { activity_name: 'doodle' });
+    } else if (label.indexOf('lofi') !== -1 || label.indexOf('lo-fi') !== -1) {
+      track('break_activity_start', { activity_name: 'lofi' });
+    }
+  }, true);
+
+  // Track successful task completion only when the UI exposes an explicit completion control.
+  document.addEventListener('change', function (event) {
+    var el = event.target;
+    if (!el || el.type !== 'checkbox') return;
+    var label = (el.getAttribute('aria-label') || '').toLowerCase();
+    if (el.checked && (label.indexOf('complete') !== -1 || label.indexOf('task') !== -1)) {
+      track('task_completion', { method: 'checkbox' });
+    }
+  }, true);
 })();
 </script>
 
