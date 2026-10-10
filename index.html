@@ -579,6 +579,7 @@ body[data-theme="dark"] #routines .choice.selected{
   #routines .routine .routine-actions button{width:34px;height:34px;min-width:34px}
 }
 
+#cancelNameEdit{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px}
 </style>
 
 <style>
@@ -2526,7 +2527,7 @@ function saveTasks(){
       const legacy=localStorage.getItem("adhdAppUserName");
       if(legacy){ saved=legacy; localStorage.setItem(NAME_KEY,legacy); }
     }
-    const overlay=$("welcomeOverlay"),input=$("userNameInput");if(saved){$("greeting").textContent=`${getGreeting()}, ${saved}`;overlay.style.display="none";}else{overlay.style.display="flex";setTimeout(()=>input.focus(),100)}$("saveUserName").onclick=()=>{const name=input.value.trim();if(!name)return;localStorage.setItem(NAME_KEY,name);localStorage.setItem("adhdAppUserName",name);$("greeting").textContent=`${getGreeting()}, ${name}`;overlay.style.display="none"};input.addEventListener("keydown",e=>{if(e.key==="Enter")$("saveUserName").click()})}
+    const overlay=$("welcomeOverlay"),input=$("userNameInput"),saveBtn=$("saveUserName"),title=$("nameDialogTitle"),help=$("nameDialogHelp"),cancelBtn=$("cancelNameEdit");let editingName=false;function openNameEditor(edit){editingName=!!edit;title.textContent=editingName?"Change your name":"What should I call you?";help.textContent=editingName?"Correct a typo or choose a different name. This only updates your saved greeting on this device.":"Your name is saved on this device so you won't have to enter it again.";saveBtn.textContent=editingName?"Save name":"Continue";cancelBtn.style.display=editingName?"block":"none";input.value=localStorage.getItem(NAME_KEY)||localStorage.getItem("adhdAppUserName")||"";overlay.style.display="flex";setTimeout(()=>{input.focus();input.select()},100)}if(saved){$("greeting").textContent=`${getGreeting()}, ${saved}`;overlay.style.display="none";}else{openNameEditor(false)}$("editNameBtn").addEventListener("click",()=>openNameEditor(true));cancelBtn.addEventListener("click",()=>{overlay.style.display="none";editingName=false});saveBtn.onclick=()=>{const name=input.value.trim();if(!name)return;localStorage.setItem(NAME_KEY,name);localStorage.setItem("adhdAppUserName",name);$("greeting").textContent=`${getGreeting()}, ${name}`;overlay.style.display="none";editingName=false};input.addEventListener("keydown",e=>{if(e.key==="Enter")saveBtn.click();if(e.key==="Escape"&&editingName)cancelBtn.click()})}
   setupIdentity();
   saveTasks();
   renderTasks();
