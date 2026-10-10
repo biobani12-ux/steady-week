@@ -1023,11 +1023,16 @@ html body .sheet.break-activity-sheet.show .break-activity-panel .sheet-head{
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style id="google-backup-ui">
-.backup-sheet .panel{max-width:430px;width:100%;box-sizing:border-box}
+.backup-sheet .panel{max-width:none!important;width:100%!important;min-height:100dvh;box-sizing:border-box;border-radius:0!important;display:flex;flex-direction:column;justify-content:flex-start;padding:calc(24px + env(safe-area-inset-top)) clamp(20px,5vw,40px) calc(24px + env(safe-area-inset-bottom));overflow-y:auto}
 .backup-status{margin:14px 0;padding:14px;border:1px solid #e5e5e5;border-radius:16px;background:#fafaf8}
 .backup-status strong{display:block;font-size:16px;margin-bottom:4px}
 .backup-status span{display:block;font-size:13px;color:#777;line-height:1.4}
 .backup-actions{display:grid;gap:10px;margin-top:14px}
+.backup-last-label{font-size:13px;line-height:1.45;color:#686868;margin-top:10px;padding:10px 12px;border-radius:10px;background:#f1f1ef}
+body[data-theme="dark"] .backup-last-label{color:#c4c6cc;background:#25272b}
+.backup-sheet .sheet-head{position:sticky;top:0;z-index:2;padding-top:4px;background:inherit}
+.backup-sheet .backup-note{font-size:13px}
+.backup-sheet #googleDisconnect{margin-top:auto;text-align:left;padding:18px 12px}
 .backup-actions button{min-height:48px}
 .backup-note{font-size:12px;color:#777;line-height:1.5;margin-top:14px}
 .backup-divider{height:1px;background:#eee;margin:18px 0}
@@ -1594,6 +1599,7 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
       <strong>Not connected</strong>
       <span>Connect Google to back up and restore your Steady Week data.</span>
     </div>
+    <div class="backup-last-label" id="backupLastLabel" role="status" aria-live="polite">Last backup: Not backed up yet</div>
     <div class="backup-actions">
       <button class="primary" id="googleConnect">Connect Google</button>
       <button class="secondary" id="googleBackup">Back up now</button>
@@ -1673,11 +1679,22 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
     };
   }
 
+  function updateBackupLastLabel(value){
+    const label = $("backupLastLabel");
+    if(!label) return;
+    const savedAt = value || localStorage.getItem("steadyWeekLastBackup_v1");
+    if(!savedAt){ label.textContent = "Last backup: Not backed up yet"; return; }
+    const date = new Date(savedAt);
+    label.textContent = "Last backup: " + (Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleString());
+  }
+
   function updateBackupStatus(title, detail){
     const box = $("backupStatus");
     if(!box) return;
     box.innerHTML = "<strong>"+escapeHtml(title)+"</strong><span>"+escapeHtml(detail)+"</span>";
+    updateBackupLastLabel();
   }
+  updateBackupLastLabel();
 
   function escapeHtml(s){
     return String(s ?? "").replace(/[&<>"']/g, c => ({
@@ -1820,7 +1837,8 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
         localStorage.setItem("steadyWeekGoogleBackupFileId_v1",file.id);
       }
       localStorage.setItem("steadyWeekLastBackup_v1",payload.savedAt);
-      updateBackupStatus("Backed up","Last backup: "+new Date(payload.savedAt).toLocaleString());
+      updateBackupStatus("Backed up","Your latest backup was saved to Google Drive.");
+      updateBackupLastLabel(payload.savedAt);
       showToast("Steady Week backed up");
     }catch(error){
       updateBackupStatus("Backup failed",error.message);
