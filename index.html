@@ -1726,14 +1726,14 @@ body[data-theme="light"] #events .event .meta{
     }
     $("openBackup")?.addEventListener("click",()=>{
       $("settingsSheet").classList.remove("show");
-      $("backupSheet").classList.add("show");
+      $("backupSheet").classList.add("open");
       if(localStorage.getItem("steadyWeekGoogleConnected_v1")){
         updateBackupStatus("Google connected","Ready to back up or restore.");
       }else if(!googleConfigured()){
         updateBackupStatus("Google setup needed","Add your Google OAuth Web client ID to GOOGLE_CLIENT_ID in index.html first.");
       }
     });
-    $("closeBackup")?.addEventListener("click",()=>$("backupSheet").classList.remove("show"));
+    $("closeBackup")?.addEventListener("click",()=>$("backupSheet").classList.remove("open"));
     $("googleConnect")?.addEventListener("click",connectGoogle);
     $("googleBackup")?.addEventListener("click",backupToGoogle);
     $("googleRestore")?.addEventListener("click",restoreFromGoogle);
