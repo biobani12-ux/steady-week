@@ -3665,6 +3665,10 @@ function saveTasks(){
 
   updateBreakGameAvailability();
   $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();updateBreakGameAvailability();showToast("Completed tasks cleared.");};
+
+  // Initialize functions while still inside the scope where they are defined.
+  initTheme();
+  initBackupUI();
 })();
 
 /* Walking reset activity */
@@ -3797,9 +3801,6 @@ function saveTasks(){
   render();
 })();
 
-
-  initTheme();
-  initBackupUI();
 </script>
 
 <script>
