@@ -1421,7 +1421,7 @@ body[data-theme="light"] #events .event .meta{
   </div>
 </div>
 
-<div class="sheet backup-sheet" id="backupSheet" aria-hidden="true">
+<div class="sheet backup-sheet" id="backupSheet">
   <div class="panel">
     <div class="sheet-head"><h2>Google backup</h2><button class="close-sheet" id="closeBackup">×</button></div>
     <div class="date" style="margin-top:4px">Optional backup for moving to another phone. Each Google account gets its own private app backup.</div>
@@ -1724,46 +1724,16 @@ body[data-theme="light"] #events .event .meta{
         settingsSheet.setAttribute("aria-hidden","true");
       });
     }
-    const openBackupPanel = event => {
-      if(event) { event.preventDefault(); event.stopPropagation(); }
-      const settings = $("settingsSheet");
-      const backup = $("backupSheet");
-      if(settings) { settings.classList.remove("show","open"); settings.setAttribute("aria-hidden","true"); }
-      if(backup) {
-        backup.classList.add("open","show");
-        backup.setAttribute("aria-hidden","false");
-        backup.style.display = "flex";
-        backup.style.visibility = "visible";
-        backup.style.opacity = "1";
-        backup.style.zIndex = "20000";
-      }
+    $("openBackup")?.addEventListener("click",()=>{
+      $("settingsSheet").classList.remove("show");
+      $("backupSheet").classList.add("show");
       if(localStorage.getItem("steadyWeekGoogleConnected_v1")){
         updateBackupStatus("Google connected","Ready to back up or restore.");
       }else if(!googleConfigured()){
-        updateBackupStatus("Google setup needed","Google backup is not configured yet.");
-      } else {
-        updateBackupStatus("Not connected","Connect Google to back up and restore your Steady Week data.");
+        updateBackupStatus("Google setup needed","Add your Google OAuth Web client ID to GOOGLE_CLIENT_ID in index.html first.");
       }
-    };
-    const openBackupButton = $("openBackup");
-    if(openBackupButton) {
-      openBackupButton.addEventListener("click", openBackupPanel);
-      openBackupButton.onclick = openBackupPanel;
-    }
-    const closeBackupPanel = event => {
-      if(event) { event.preventDefault(); event.stopPropagation(); }
-      const backup = $("backupSheet");
-      if(backup) {
-        backup.classList.remove("open","show");
-        backup.setAttribute("aria-hidden","true");
-        backup.style.display = "";
-        backup.style.visibility = "";
-        backup.style.opacity = "";
-        backup.style.zIndex = "";
-      }
-    };
-    $("closeBackup")?.addEventListener("click",closeBackupPanel);
-    $("closeBackup") && ($("closeBackup").onclick = closeBackupPanel);
+    });
+    $("closeBackup")?.addEventListener("click",()=>$("backupSheet").classList.remove("show"));
     $("googleConnect")?.addEventListener("click",connectGoogle);
     $("googleBackup")?.addEventListener("click",backupToGoogle);
     $("googleRestore")?.addEventListener("click",restoreFromGoogle);
@@ -3666,7 +3636,7 @@ function saveTasks(){
   updateBreakGameAvailability();
   $("clearDone").onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks();updateBreakGameAvailability();showToast("Completed tasks cleared.");};
 
-  // Initialize functions while still inside the scope where they are defined.
+  // Initialize settings and Google backup while their functions are in scope.
   initTheme();
   initBackupUI();
 })();
