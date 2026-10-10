@@ -1258,62 +1258,44 @@ body[data-theme="light"] #events .event .meta{
   </script>
 
 <style id="name-sheet-dark-theme-fix">
-/* Keep the change-name dialog readable in dark mode without changing light mode. */
-body[data-theme="dark"] #nameSheet {
-  background: rgba(0,0,0,.76) !important;
-  color: #f3f3f3 !important;
-  align-items: flex-end;
-}
-body[data-theme="dark"] #nameSheet > .panel {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 430px;
-  margin: auto auto 0;
-  padding: 26px 20px max(30px, env(safe-area-inset-bottom));
+/* Narrow, component-only fix: keep the existing sheet layout and app behavior intact. */
+body[data-theme="dark"] #nameSheet .panel {
   background: #1c1d20 !important;
   color: #f3f3f3 !important;
-  border: 1px solid #383a3f;
-  border-bottom: 0;
-  border-radius: 28px 28px 0 0;
-  box-shadow: 0 -12px 36px rgba(0,0,0,.28);
+  border-color: #383a3f !important;
 }
 body[data-theme="dark"] #nameSheet h2,
-body[data-theme="dark"] #nameSheet label,
-body[data-theme="dark"] #nameSheet p,
-body[data-theme="dark"] #nameSheet .sheet-head {
+body[data-theme="dark"] #nameSheet label {
   color: #f3f3f3 !important;
 }
-body[data-theme="dark"] #nameSheet .sheet-head { margin-bottom: 22px; }
 body[data-theme="dark"] #nameSheet #changeNameInput {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 58px;
-  margin: 12px 0 22px;
-  padding: 14px 16px;
   background: #292b30 !important;
   color: #f7f7f7 !important;
-  -webkit-text-fill-color: #f7f7f7;
+  -webkit-text-fill-color: #f7f7f7 !important;
   border: 1px solid #555861 !important;
-  border-radius: 16px;
   caret-color: #1683f8;
 }
-body[data-theme="dark"] #nameSheet #changeNameInput::placeholder { color: #a7abb4 !important; opacity: 1; }
+body[data-theme="dark"] #nameSheet #changeNameInput::placeholder {
+  color: #a7abb4 !important;
+  opacity: 1;
+}
 body[data-theme="dark"] #nameSheet #changeNameInput:focus {
-  outline: 3px solid #1683f8; outline-offset: 2px; border-color: #1683f8 !important;
+  outline: 2px solid #1683f8;
+  outline-offset: 1px;
 }
 body[data-theme="dark"] #nameSheet #saveChangedName {
-  min-height: 58px; background: #f3f3f3 !important; color: #111214 !important;
-  border: 1px solid #f3f3f3 !important; border-radius: 16px; font-weight: 700;
+  background: #f3f3f3 !important;
+  color: #111214 !important;
+  border-color: #f3f3f3 !important;
 }
-body[data-theme="dark"] #nameSheet #cancelChangedName {
-  min-height: 56px; margin-top: 10px; background: #292b30 !important;
-  color: #f3f3f3 !important; border: 1px solid #555861 !important; border-radius: 16px;
-}
+body[data-theme="dark"] #nameSheet #cancelChangedName,
 body[data-theme="dark"] #nameSheet #closeNameSheet {
-  color: #f3f3f3 !important; background: #292b30; border: 1px solid #45474d;
+  background: #292b30 !important;
+  color: #f3f3f3 !important;
+  border-color: #555861 !important;
 }
 </style>
+
 </head>
 <body>
 <div class="app">
