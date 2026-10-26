@@ -42,6 +42,38 @@
   .progress-card{background:white;border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:8px}
   .progress-date{font-size:13px;color:var(--muted);margin-bottom:8px}.progress-count{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:18px}.progress-count.green{color:#2f9e44}
   .progress-chart{display:flex;flex-direction:column;gap:14px}.progress-row{display:grid;grid-template-columns:78px 1fr 34px;align-items:center;gap:10px;font-size:12px}.progress-row-label{font-weight:700}.progress-bar{height:12px;background:#eee;border-radius:10px;overflow:hidden}.progress-bar i{display:block;height:100%;border-radius:10px}.progress-bar i.complete{background:#2f9e44}.progress-bar i.pending{background:#e0ad00}.progress-note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:18px}
+  .weekly-progress-card{background:var(--card,white);border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:14px;color:var(--ink)}
+  .weekly-progress-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .weekly-progress-heading h2{font-size:17px;line-height:1.2;margin:0;font-weight:800}
+  .weekly-progress-heading p{font-size:12px;color:var(--muted);margin:5px 0 0}
+  .weekly-progress-nav{display:flex;gap:6px}
+  .weekly-week-nav{border:1px solid var(--line);background:var(--card,white);color:var(--ink);border-radius:9px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
+  .weekly-week-nav:disabled{opacity:.35;cursor:default}
+  .weekly-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+  .weekly-legend span{display:flex;align-items:center;gap:5px}
+  .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+  .legend-dot.success{background:#2f9e44}.legend-dot.in-progress{background:#e0ad00}
+  .weekly-progress-timeline{position:relative;padding-left:28px}
+  .weekly-progress-timeline:before{content:"";position:absolute;left:8px;top:12px;bottom:12px;width:2px;background:var(--line)}
+  .weekly-day{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:0 0 18px;min-height:62px}
+  .weekly-day:last-child{padding-bottom:0}
+  .weekly-day:before{content:"";position:absolute;left:-25px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--line);border:2px solid var(--card,white);box-shadow:0 0 0 1px var(--line)}
+  .weekly-day.has-progress:before{background:#2f9e44;box-shadow:0 0 0 1px #2f9e44}
+  .weekly-day-main{min-width:0}
+  .weekly-day-date{font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .weekly-today-tag{font-size:9px;text-transform:uppercase;letter-spacing:.06em;background:var(--line);padding:3px 6px;border-radius:6px;color:var(--ink)}
+  .weekly-day-summary{font-size:11px;color:var(--muted);margin-top:4px}
+  .weekly-day-bars{display:flex;flex-direction:column;gap:5px;min-width:100px;max-width:140px;width:26vw;align-self:center}
+  .weekly-mini-bar{height:7px;border-radius:10px;background:var(--line);overflow:hidden;display:flex}
+  .weekly-mini-bar .success-fill{height:100%;background:#2f9e44}
+  .weekly-mini-bar .progress-fill{height:100%;background:#e0ad00}
+  .weekly-counts{display:flex;justify-content:space-between;gap:8px;font-size:10px;font-weight:800}
+  .weekly-counts .success-text{color:#2f9e44}.weekly-counts .progress-text{color:#b88700}
+  .weekly-empty{font-size:12px;color:var(--muted);padding:8px 0 4px}
+  body[data-theme="dark"] .weekly-progress-card{background:#1c1d20;color:#f3f3f3;border-color:#383a3f}
+  body[data-theme="dark"] .weekly-day:before{border-color:#1c1d20}
+  @media(max-width:420px){.weekly-progress-card{padding:16px}.weekly-progress-heading{margin-bottom:14px}.weekly-day{grid-template-columns:minmax(0,1fr) auto;gap:8px}.weekly-day-bars{min-width:82px;width:25vw}.weekly-legend{gap:8px}}
+
   .break-icon{width:28px;height:28px;margin:0 auto;color:#0784ff;display:flex;align-items:center;justify-content:center}.break-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .break-card b{margin-top:9px}
   nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);height:70px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:10}
@@ -600,6 +632,9 @@ body[data-theme="dark"] .welcome-card #cancelNameEdit{background:transparent;col
   .calendar-task-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   .calendar-task-action{font-size:13px;padding:8px 12px;min-height:36px;border-radius:10px}
   body[data-theme="dark"] #events .calendar-task-action{border:1px solid #45474d}
+
+/* v51 calendar screenshot import */
+.calendar-import-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.calendar-import-actions button{flex:1;min-width:140px}.import-help{font-size:12px;color:var(--muted);line-height:1.45;margin:8px 0 12px}.import-sheet .panel{max-height:88vh;overflow:auto}.import-sheet textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card);color:var(--ink);font:inherit}.import-preview-list{display:flex;flex-direction:column;gap:10px;margin:12px 0}.import-event-row{border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.import-event-row .wide,.import-event-row .remove-import-event{grid-column:1/-1}.import-event-row label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}.import-event-row input{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--card);color:var(--ink);font:inherit}.meeting-block{background:#e0ad00!important}.timeline-legend{font-size:11px;color:var(--muted);display:flex;gap:12px;margin-top:8px}.timeline-legend i{display:inline-block;width:8px;height:8px;border-radius:3px;background:#e0ad00}body[data-theme="dark"] .import-event-row input,body[data-theme="dark"] .import-sheet textarea{background:#24262a;color:#f3f3f3;border-color:#45474d}
 </style>
 
 <style>
@@ -1307,7 +1342,7 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
         </div>
         <div style="font-size:11px;color:#aaa;margin-top:10px">For multiple tasks, say “then” between each: “Clean the kitchen at 10 AM, then buy groceries at 12 PM, then send an email at 3 PM.”</div>
       </div>
-<div class="day-timeline" id="dayTimeline"><div class="timeline-head"><span>YOUR DAY</span><span id="timelineSummary">No time blocked yet</span></div><div class="timeline-track" id="timelineTrack"></div></div>
+<div class="day-timeline" id="dayTimeline"><div class="timeline-head"><span>YOUR DAY</span><span id="timelineSummary">No time blocked yet</span></div><div class="timeline-track" id="timelineTrack"></div><div class="timeline-legend"><span><i></i> Meeting</span><span>■ Task</span></div></div>
       <button class="up-next-card" id="upNextCard" type="button" aria-label="Start the next task timer">
         <div class="up-next-top"><span>UP NEXT</span><span class="up-next-action">START TIMER ↗</span></div>
         <div class="up-next-main"><div class="up-next-copy"><div class="up-next-time" id="upNextTime">Finding your next task…</div><div class="up-next-name" id="upNextName"></div></div><div class="up-next-play" aria-hidden="true">▶</div></div>
@@ -1329,6 +1364,23 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
         </div>
         <div class="progress-note" id="progressNote"></div>
       </div>
+      <div class="weekly-progress-card">
+        <div class="weekly-progress-heading">
+          <div>
+            <h2 id="weeklyProgressTitle">This week</h2>
+            <p id="weeklyProgressRange">Your week, one day at a time.</p>
+          </div>
+          <div class="weekly-progress-nav">
+            <button type="button" id="weeklyPrevWeek" class="weekly-week-nav" aria-label="View previous week">‹ Back</button>
+            <button type="button" id="weeklyNextWeek" class="weekly-week-nav" aria-label="View next week" disabled>Next ›</button>
+          </div>
+          <div class="weekly-legend">
+            <span><i class="legend-dot success"></i> Success</span>
+            <span><i class="legend-dot in-progress"></i> In progress</span>
+          </div>
+        </div>
+        <div id="weeklyProgressTimeline" class="weekly-progress-timeline" aria-live="polite"></div>
+      </div>
     </div>
   </section>
 
@@ -1349,6 +1401,7 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
   <section id="calendar" class="screen">
     <header><div><h1>Calendar</h1><div class="date">See what is waiting for you.</div></div><button class="icon-btn" id="calendarAdd">+</button></header>
     <div class="content">
+      <div class="calendar-import-actions"><button class="secondary" id="importCalendarScreenshot">Import screenshot</button><button class="secondary" id="addMeetingQuick">+ Add meeting</button><input id="calendarScreenshotFile" type="file" accept="image/*" hidden></div>
       <div class="quick-voice-mini">
         <button class="mic mini-mic" id="calendarVoiceBtn" aria-label="Start calendar voice input">●</button>
         <input class="task-input mini-voice-input" id="calendarQuickInput" placeholder='Say a task, e.g. "Doctor appointment on 14th November at 4 PM"'>
@@ -1550,6 +1603,7 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
     <button class="primary" id="saveCalendar">Schedule</button><button class="secondary" id="cancelCalendar">Cancel</button>
   </div>
 </div>
+<div class="sheet import-sheet" id="calendarImportSheet" aria-hidden="true"><div class="panel"><div class="sheet-head"><h2>Import calendar screenshot</h2><button class="close-sheet" id="closeCalendarImport" aria-label="Close">×</button></div><p class="import-help">Upload a clear screenshot. OCR suggests event titles and times; verify every row before saving. Calendar layouts can be misread.</p><label for="calendarImportDate">Default date when no date is visible</label><input id="calendarImportDate" type="date"><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="secondary" id="runCalendarOCR">Read screenshot</button><button class="secondary" id="parseCalendarText">Parse text below</button><button class="secondary" id="addImportEvent">+ Add event row</button></div><div id="calendarOCRStatus" class="import-help" aria-live="polite">No screenshot read yet.</div><label for="calendarOCRText">Recognized text (editable)</label><textarea id="calendarOCRText" placeholder="OCR text appears here. You can also paste meeting details."></textarea><div class="section-title" style="margin-top:16px"><span>Review events</span><span id="importEventCount" class="date">0 found</span></div><div id="calendarImportPreview" class="import-preview-list"></div><button class="primary" id="saveImportedEvents">Save confirmed meetings</button><button class="secondary" id="cancelCalendarImport">Cancel</button></div></div>
 <div class="sheet" id="nameSheet">
   <div class="panel">
     <div class="sheet-head"><h2>Change your name</h2><button class="close-sheet" id="closeNameSheet">×</button></div>
@@ -2140,7 +2194,9 @@ function saveTasks(){
     return changed;
   }
   saveRoutines();
-  let events = [];
+  const EVENTS_KEY="steadyWeekCalendarEvents_v1"; let events=[];
+  try{const savedEvents=JSON.parse(localStorage.getItem(EVENTS_KEY)||"[]");if(Array.isArray(savedEvents))events=savedEvents.filter(e=>e&&e.date).map(e=>({...e,name:String(e.name||"Untitled meeting"),time:String(e.time||""),duration:Math.max(5,Number(e.duration)||30),kind:e.kind||"meeting"}));}catch(e){events=[]}
+  function saveEvents(){try{localStorage.setItem(EVENTS_KEY,JSON.stringify(events))}catch(e){showToast("Could not save meetings on this device.")}}
   const PROGRESS_KEY = "steadyWeekProgress_v1";
   let progressHistory = {};
   try { progressHistory = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}"); } catch(e) { progressHistory = {}; }
@@ -2230,7 +2286,14 @@ function saveTasks(){
 
   function taskMinutes(t){ if(!t.when) return 24*60+1; const p=t.when.split(":"); return Number(p[0])*60+Number(p[1]); }
   function taskDateTimeKey(t){ return `${t.taskDate || todayISO()} ${t.when || "23:59"}`; }
-  function renderDayTimeline(sortedTasks){ const track=$("timelineTrack"); if(!track)return; track.innerHTML=""; const startHour=6,endHour=24,span=(endHour-startHour)*60; for(let hour=startHour;hour<=endHour;hour+=3){const pct=((hour-startHour)*60/span)*100; const line=document.createElement("div"); line.className="timeline-hour"; line.style.left=pct+"%"; if(hour<24){const lab=document.createElement("div");lab.className="timeline-hour-label";lab.textContent=hour===12?"12 PM":(hour<12?hour+" AM":(hour-12)+" PM");line.appendChild(lab)} track.appendChild(line)} const timed=sortedTasks.filter(t=>(t.taskDate||todayISO())===todayISO()&&t.when&&!t.done); timed.forEach(t=>{const mins=taskMinutes(t),left=Math.max(0,Math.min(100,((mins-startHour*60)/span)*100)),width=Math.max(1,Math.min(100-left,(Number(t.duration||15)/span)*100));const b=document.createElement("div");b.className="timeline-block";b.style.left=left+"%";b.style.width=width+"%";b.title=`${t.name} · ${t.when} · ${t.duration} min`;track.appendChild(b)}); const now=new Date(),nowMin=now.getHours()*60+now.getMinutes(); if(nowMin>=startHour*60&&nowMin<=endHour*60){const n=document.createElement("div");n.className="timeline-now";n.style.left=((nowMin-startHour*60)/span*100)+"%";track.appendChild(n)} const total=timed.reduce((sum,t)=>sum+Number(t.duration||0),0);$("timelineSummary").textContent=timed.length?`${timed.length} task${timed.length>1?"s":""} · ${total} min blocked`:"No time blocked yet"; }
+  function renderDayTimeline(sortedTasks){
+    const track=$("timelineTrack");if(!track)return;track.innerHTML="";const startHour=6,endHour=24,span=(endHour-startHour)*60;
+    for(let hour=startHour;hour<=endHour;hour+=3){const pct=((hour-startHour)*60/span)*100,line=document.createElement("div");line.className="timeline-hour";line.style.left=pct+"%";if(hour<24){const lab=document.createElement("div");lab.className="timeline-hour-label";lab.textContent=hour===12?"12 PM":(hour<12?hour+" AM":(hour-12)+" PM");line.appendChild(lab)}track.appendChild(line)}
+    const timed=sortedTasks.filter(t=>(t.taskDate||todayISO())===todayISO()&&t.when&&!t.done);timed.forEach(t=>{const mins=taskMinutes(t),left=Math.max(0,Math.min(100,((mins-startHour*60)/span)*100)),width=Math.max(1,Math.min(100-left,(Number(t.duration||15)/span)*100)),b=document.createElement("div");b.className="timeline-block";b.style.left=left+"%";b.style.width=width+"%";b.title=`${t.name} · ${t.when} · ${t.duration} min`;track.appendChild(b)});
+    const todayMeetings=events.filter(e=>e.date===todayISO()&&e.time);todayMeetings.forEach(e=>{const mins=+e.time.slice(0,2)*60+ +e.time.slice(3),dur=Math.max(5,Number(e.duration)||30),left=Math.max(0,Math.min(100,((mins-startHour*60)/span)*100)),width=Math.max(1,Math.min(100-left,(dur/span)*100)),b=document.createElement("div");b.className="timeline-block meeting-block";b.style.left=left+"%";b.style.width=width+"%";b.title=`Meeting: ${e.name} · ${e.time} · ${dur} min`;track.appendChild(b)});
+    const now=new Date(),nowMin=now.getHours()*60+now.getMinutes();if(nowMin>=startHour*60&&nowMin<=endHour*60){const n=document.createElement("div");n.className="timeline-now";n.style.left=((nowMin-startHour*60)/span*100)+"%";track.appendChild(n)}
+    const total=timed.reduce((sum,t)=>sum+Number(t.duration||0),0),meetingMins=todayMeetings.reduce((sum,e)=>sum+Math.max(5,Number(e.duration)||30),0),parts=[];if(timed.length)parts.push(`${timed.length} task${timed.length>1?"s":""}`);if(todayMeetings.length)parts.push(`${todayMeetings.length} meeting${todayMeetings.length>1?"s":""}`);parts.push(`${total+meetingMins} min blocked`);$("timelineSummary").textContent=parts.join(" · ");
+  }
 
   function renderUpNextTask(sortedTasks){
     const card=$("upNextCard");
@@ -3334,7 +3397,111 @@ function saveTasks(){
     $("completedValue").textContent=completed; $("pendingValue").textContent=pending;
     $("completedBar").style.width=(completed/total*100)+"%"; $("pendingBar").style.width=(pending/total*100)+"%";
     $("progressNote").textContent=pending ? `${pending} pending task${pending===1?"":"s"} will carry forward to the next day.` : "Everything scheduled for today is complete.";
+    renderWeeklyProgress();
   }
+
+  let weeklyProgressOffset = 0;
+  function shiftISODate(dateISO, days){
+    const d = new Date(dateISO + "T12:00:00");
+    d.setDate(d.getDate()+days);
+    return isoDate(d);
+  }
+  function formatWeekDate(dateISO){
+    return new Date(dateISO + "T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
+  }
+  function renderWeeklyProgress(){
+    const root = $("weeklyProgressTimeline");
+    if(!root) return;
+    const today = todayISO();
+    const endDate = shiftISODate(today, -weeklyProgressOffset*7);
+    const startDate = shiftISODate(endDate, -6);
+    const title = $("weeklyProgressTitle");
+    const range = $("weeklyProgressRange");
+    if(title) title.textContent = weeklyProgressOffset === 0 ? "This week" : weeklyProgressOffset === 1 ? "Last week" : `${weeklyProgressOffset} weeks ago`;
+    if(range) range.textContent = `${formatWeekDate(startDate)} – ${formatWeekDate(endDate)}`;
+    const prev = $("weeklyPrevWeek"), next = $("weeklyNextWeek");
+    if(prev) prev.disabled = false;
+    if(next) next.disabled = weeklyProgressOffset === 0;
+    root.innerHTML = "";
+    let daysWithData = 0;
+    for(let offset=6; offset>=0; offset--){
+      const date = shiftISODate(endDate, -offset);
+      const dayTasks = tasks.filter(t => (t.taskDate || today) === date);
+      let snapshot = progressHistory[date];
+      if(date === today || dayTasks.length){
+        snapshot = {
+          total: dayTasks.length,
+          completed: dayTasks.filter(t=>t.done === true).length,
+          pending: dayTasks.filter(t=>t.done !== true).length
+        };
+        if(dayTasks.length){
+          progressHistory[date] = snapshot;
+          saveProgress();
+        }
+      }
+      const total = Math.max(0, Number(snapshot?.total) || 0);
+      const completed = Math.min(total, Math.max(0, Number(snapshot?.completed) || 0));
+      const inProgress = Math.min(total-completed, Math.max(0, Number(snapshot?.pending) || 0));
+      if(total > 0) daysWithData++;
+      const dateObj = new Date(date + "T12:00:00");
+      const day = document.createElement("div");
+      day.className = "weekly-day" + (completed > 0 ? " has-progress" : "");
+      const main = document.createElement("div");
+      main.className = "weekly-day-main";
+      const label = document.createElement("div");
+      label.className = "weekly-day-date";
+      const dateText = document.createElement("span");
+      dateText.textContent = date === today ? "Today" : dateObj.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+      label.appendChild(dateText);
+      if(date === today){
+        const tag = document.createElement("span");
+        tag.className = "weekly-today-tag";
+        tag.textContent = "Today";
+        label.appendChild(tag);
+      }
+      const summary = document.createElement("div");
+      summary.className = "weekly-day-summary";
+      summary.textContent = total ? `${total} task${total===1?"":"s"} · ${Math.round(completed/total*100)}% successful` : (date > today ? "Upcoming day" : "No task history recorded");
+      main.append(label,summary);
+      const bars = document.createElement("div");
+      bars.className = "weekly-day-bars";
+      const bar = document.createElement("div");
+      bar.className = "weekly-mini-bar";
+      const green = document.createElement("span");
+      green.className = "success-fill";
+      green.style.width = (total ? completed/total*100 : 0) + "%";
+      const yellow = document.createElement("span");
+      yellow.className = "progress-fill";
+      yellow.style.width = (total ? inProgress/total*100 : 0) + "%";
+      bar.append(green,yellow);
+      const counts = document.createElement("div");
+      counts.className = "weekly-counts";
+      const doneCount = document.createElement("span");
+      doneCount.className = "success-text";
+      doneCount.textContent = `✓ ${completed}`;
+      const pendingCount = document.createElement("span");
+      pendingCount.className = "progress-text";
+      pendingCount.textContent = `● ${inProgress}`;
+      counts.append(doneCount,pendingCount);
+      bars.append(bar,counts);
+      day.append(main,bars);
+      root.appendChild(day);
+    }
+    if(!daysWithData){
+      const note = document.createElement("div");
+      note.className = "weekly-empty";
+      note.textContent = "No saved task history for this week. Older days without recorded history cannot be reconstructed.";
+      root.appendChild(note);
+    }
+  }
+  $("weeklyPrevWeek")?.addEventListener("click",()=>{
+    weeklyProgressOffset++;
+    renderWeeklyProgress();
+  });
+  $("weeklyNextWeek")?.addEventListener("click",()=>{
+    if(weeklyProgressOffset > 0) weeklyProgressOffset--;
+    renderWeeklyProgress();
+  });
 
   let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let calendarSelected = todayISO();
@@ -3400,7 +3567,7 @@ function saveTasks(){
     selectedEvents.forEach(event=>{
       const card=document.createElement("div"); card.className="event calendar-task-card";
       const title=document.createElement("b"); title.textContent=event.name||"Untitled event"; card.appendChild(title);
-      const meta=document.createElement("div"); meta.className="meta"; meta.textContent=(event.time||"Any time")+" · "+(event.repeat||"Does not repeat"); card.appendChild(meta);
+      const meta=document.createElement("div"); meta.className="meta"; meta.textContent=(event.time?formatTime(event.time):"Time not set")+(event.duration?" · "+event.duration+" min":"")+" · "+(event.repeat||"Does not repeat"); card.appendChild(meta);
       const actions=document.createElement("div"); actions.className="calendar-task-actions";
       const edit=document.createElement("button"); edit.type="button"; edit.className="secondary calendar-task-action"; edit.textContent="Edit"; edit.onclick=()=>{
         $("calTask").value=event.name||""; $("calDate").value=event.date||calendarSelected; $("calTime").value=event.time||""; $("calRepeat").value=event.repeat||"Does not repeat";
@@ -3408,7 +3575,7 @@ function saveTasks(){
       }; actions.appendChild(edit);
       const cancel=document.createElement("button"); cancel.type="button"; cancel.className="danger calendar-task-action"; cancel.textContent="Cancel event"; cancel.onclick=()=>{
         if(!confirm("Cancel this calendar event?")) return;
-        const index=events.indexOf(event); if(index>-1) events.splice(index,1); renderCalendar(); showToast("Event cancelled.");
+        const index=events.indexOf(event); if(index>-1) events.splice(index,1); saveEvents(); renderCalendar(); renderTasks(); showToast("Event cancelled.");
       }; actions.appendChild(cancel); card.appendChild(actions); eventsEl.appendChild(card);
     });
   }
@@ -3420,11 +3587,23 @@ function saveTasks(){
   $("cancelCalendar").onclick=()=>{$("calendarSheet").classList.remove("show");resetCalendarEditor();};
   $("saveCalendar").onclick=()=>{
     const name=$("calTask").value.trim();if(!name){showToast("Add a task name first.");return}
-    const record={name,date:$("calDate").value||"Unspecified date",time:$("calTime").value,repeat:$("calRepeat").value};
+    const record={name,date:$("calDate").value||calendarSelected,time:$("calTime").value,repeat:$("calRepeat").value,duration:30,kind:"meeting"};
     if(calendarEditingEventIndex!==null && events[calendarEditingEventIndex]){events[calendarEditingEventIndex]=record;showToast("Event updated.");}
     else {events.push(record);showToast("Scheduled.");}
-    $("calendarSheet").classList.remove("show");resetCalendarEditor();renderCalendar();$("calTask").value="";
+    saveEvents(); $("calendarSheet").classList.remove("show");resetCalendarEditor();renderCalendar();$("calTask").value="";
   };
+  const importRows=[];const importSheet=$("calendarImportSheet"),importPreview=$("calendarImportPreview"),importText=$("calendarOCRText");
+  function openCalendarImport(){importRows.length=0;importText.value="";$("calendarImportDate").value=calendarSelected||todayISO();$("calendarOCRStatus").textContent="Read the screenshot, then review every event before saving.";renderImportRows();importSheet.classList.add("show");importSheet.setAttribute("aria-hidden","false")}
+  function closeCalendarImport(){importSheet.classList.remove("show");importSheet.setAttribute("aria-hidden","true")}
+  $("importCalendarScreenshot").onclick=()=>$("calendarScreenshotFile").click();$("addMeetingQuick").onclick=()=>{resetCalendarEditor();$("calTask").value="";$("calDate").value=calendarSelected;$("calTime").value="";$("calRepeat").value="Does not repeat";$("calendarSheet").classList.add("show")};
+  $("calendarScreenshotFile").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(!f)return;openCalendarImport();window.calendarImportImage=f;$("calendarOCRStatus").textContent=`Selected ${f.name}. Tap Read screenshot.`});$("closeCalendarImport").onclick=closeCalendarImport;$("cancelCalendarImport").onclick=closeCalendarImport;
+  function parseClock(raw){let m=(raw||"").toLowerCase().replace(/\./g,"").match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);if(!m)return "";let h=+m[1],mi=+(m[2]||0),ap=m[3];if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;if(!ap&&h<=7)h+=12;if(h>23||mi>59)return "";return String(h).padStart(2,"0")+":"+String(mi).padStart(2,"0")}
+  function parseCalendarOCR(){const lines=(importText.value||"").split(/\n+/).map(x=>x.replace(/\s+/g," ").trim()).filter(Boolean),found=[],re=/\b(\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?))\b/ig;for(const line of lines){const ms=[...line.matchAll(re)];if(!ms.length)continue;const time=parseClock(ms[0][1]);if(!time)continue;let name=line.replace(ms[0][0],"").replace(/[|•·–—-]+/g," ").replace(/\s+/g," ").trim();name=name.replace(/^\d{1,2}\s*[:.]?\s*/,"").trim()||"Meeting";let duration=30;if(ms.length>1){const end=parseClock(ms[1][1]);if(end){const a=+time.slice(0,2)*60+ +time.slice(3),b=+end.slice(0,2)*60+ +end.slice(3);if(b>a)duration=b-a}}found.push({name,date:$("calendarImportDate").value||calendarSelected,time,duration:Math.min(480,Math.max(5,duration))})}if(!found.length){lines.filter(x=>x.length>2).slice(0,20).forEach(name=>found.push({name:name.slice(0,100),date:$("calendarImportDate").value||calendarSelected,time:"",duration:30}))}importRows.splice(0,importRows.length,...found);renderImportRows();$("calendarOCRStatus").textContent=found.length?`Found ${found.length} possible rows. Check titles, dates and times.`:"No text detected. Add rows manually."}
+  function renderImportRows(){importPreview.innerHTML="";$("importEventCount").textContent=`${importRows.length} found`;importRows.forEach((r,i)=>{const c=document.createElement("div");c.className="import-event-row";function field(label,key,type,wide){const w=document.createElement("div");if(wide)w.className="wide";const l=document.createElement("label");l.textContent=label;const input=document.createElement("input");input.type=type;input.value=r[key]??"";input.addEventListener("input",()=>r[key]=type==="number"?input.value:input.value);w.append(l,input);c.append(w)}field("Meeting title","name","text",true);field("Date","date","date",false);field("Start time","time","time",false);field("Duration (minutes)","duration","number",false);const rm=document.createElement("button");rm.className="secondary remove-import-event";rm.textContent="Remove row";rm.onclick=()=>{importRows.splice(i,1);renderImportRows()};c.append(rm);importPreview.append(c)});if(!importRows.length){const p=document.createElement("p");p.className="import-help";p.textContent="No rows yet. Read a screenshot or add an event row.";importPreview.append(p)}}
+  $("addImportEvent").onclick=()=>{importRows.push({name:"Meeting",date:$("calendarImportDate").value||calendarSelected,time:"",duration:30});renderImportRows()};$("parseCalendarText").onclick=parseCalendarOCR;
+  $("runCalendarOCR").onclick=async()=>{const file=window.calendarImportImage;if(!file){$("calendarOCRStatus").textContent="Choose a screenshot first.";return}const btn=$("runCalendarOCR");btn.disabled=true;$("calendarOCRStatus").textContent="Reading screenshot…";try{if(!window.Tesseract){await new Promise((resolve,reject)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";sc.onload=resolve;sc.onerror=()=>reject(Error("OCR library could not load. Check internet access."));document.head.append(sc)})}const result=await window.Tesseract.recognize(file,"eng",{logger:m=>{if(m.status==="recognizing text")$("calendarOCRStatus").textContent=`Reading screenshot… ${Math.round((m.progress||0)*100)}%`}});importText.value=result.data.text||"";parseCalendarOCR()}catch(err){$("calendarOCRStatus").textContent=`Could not read screenshot: ${err.message}. Paste the text below and choose Parse text below.`}finally{btn.disabled=false}};
+  $("saveImportedEvents").onclick=()=>{const valid=importRows.filter(r=>r.name&&r.name.trim()&&r.date&&/^\d{4}-\d{2}-\d{2}$/.test(r.date));if(!valid.length){showToast("Add at least one event with a title and date.");return}const overlap=valid.some(r=>r.time&&events.some(e=>e.date===r.date&&e.time&&(()=>{const a=+r.time.slice(0,2)*60+ +r.time.slice(3),b=a+Math.max(5,+r.duration||30),x=+e.time.slice(0,2)*60+ +e.time.slice(3),y=x+Math.max(5,+e.duration||30);return a<y&&b>x})()));if(overlap&&!confirm("Some meetings may overlap existing events. Save anyway?"))return;const added=valid.map(r=>({...r,name:r.name.trim(),duration:Math.max(5,Math.min(480,+r.duration||30)),repeat:"Does not repeat",kind:"meeting",source:"screenshot",id:Date.now()+Math.random()}));events.push(...added);saveEvents();calendarSelected=added[0].date;calendarCursor=new Date(calendarSelected+"T12:00:00");renderCalendar();renderTasks();closeCalendarImport();showToast(`Saved ${added.length} meeting${added.length===1?"":"s"}.`)};
+
   const WORDLE_WORDS=[
     "apple","brave","cabin","candy","chair","charm","clean","cloud","dance","dream",
     "eagle","earth","flame","flock","focus","fresh","giant","grape","green","happy",
