@@ -2060,6 +2060,7 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
     $("googleDisconnect")?.addEventListener("click",disconnectGoogle);
   }
   const TASKS_KEY = "adhdAppTasks_v1";
+const BREAK_ELIGIBILITY_KEY = "steadyWeekBreakEligibility_v1";
 const NAME_KEY = "adhdAppUserName_v1";
 
 const defaultTasks = [
@@ -2103,6 +2104,8 @@ function saveTasks(){
   }catch(e){
     console.warn("Could not save tasks",e);
   }
+  // Moving tasks to another date changes whether today's break games are unlocked.
+  if(typeof updateBreakGameAvailability === "function") updateBreakGameAvailability();
 }
   const ROUTINES_KEY = "adhdAppRoutines_v1";
   const defaultRoutines = [
@@ -2222,10 +2225,31 @@ function saveTasks(){
   const showToast=t=>{ $("toast").textContent=t; $("toast").style.display="block"; setTimeout(()=>$("toast").style.display="none",1800); };
 
   $("todayLabel").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short"});
+  function getBreakEligibility(){
+    try { return JSON.parse(localStorage.getItem(BREAK_ELIGIBILITY_KEY) || "{}"); }
+    catch(e) { return {}; }
+  }
   function todayTasksAreComplete(){
     const today = todayISO();
     const todayTasks = tasks.filter(t => (t.taskDate || today) === today);
-    return todayTasks.length > 0 && todayTasks.every(t => t.done === true);
+    // Empty days do not auto-unlock games. Eligibility is earned by completing
+    // at least one task today, or by explicitly confirming a planned rest day.
+    const eligibility = getBreakEligibility();
+    if(eligibility.date === today && eligibility.restDayConfirmed === true) return true;
+    return todayTasks.length > 0 && todayTasks.every(t => t.done === true) &&
+      eligibility.date === today && eligibility.completedTaskIds?.length > 0;
+  }
+  function recordBreakTaskCompletion(task){
+    const today = todayISO();
+    if(!task || (task.taskDate || today) !== today || task.done !== true) return;
+    const eligibility = getBreakEligibility();
+    const ids = eligibility.date === today && Array.isArray(eligibility.completedTaskIds)
+      ? eligibility.completedTaskIds : [];
+    if(!ids.includes(String(task.id))) ids.push(String(task.id));
+    localStorage.setItem(BREAK_ELIGIBILITY_KEY, JSON.stringify({
+      date: today, completedTaskIds: ids, restDayConfirmed: false
+    }));
+    updateBreakGameAvailability();
   }
 
   function updateBreakGameAvailability(){
@@ -2233,10 +2257,31 @@ function saveTasks(){
     document.querySelectorAll('.break-card[data-requires-complete="true"]').forEach(card=>{
       card.classList.toggle("locked", !unlocked);
       card.setAttribute("aria-disabled", unlocked ? "false" : "true");
-      card.title = unlocked
-        ? ""
-        : "Complete all of today's tasks to unlock this game.";
+      card.title = unlocked ? "" : "Complete today's tasks to unlock this game.";
     });
+    const host = document.querySelector("#break .break-content, #break .screen-content, #break");
+    let restButton = document.getElementById("confirmRestDay");
+    const today = todayISO();
+    const todaysTasks = tasks.filter(t => (t.taskDate || today) === today);
+    const eligibility = getBreakEligibility();
+    if(host && !unlocked && todaysTasks.length === 0 && !restButton){
+      restButton = document.createElement("button");
+      restButton.id = "confirmRestDay";
+      restButton.className = "secondary";
+      restButton.textContent = "Confirm today is a planned rest day";
+      restButton.addEventListener("click",()=>{
+        const ok = confirm("This will unlock break games for today without task completion. Use this only if today is intentionally task-free.");
+        if(!ok) return;
+        localStorage.setItem(BREAK_ELIGIBILITY_KEY, JSON.stringify({date:today,completedTaskIds:[],restDayConfirmed:true}));
+        updateBreakGameAvailability();
+        showToast("Planned rest day confirmed.");
+      });
+      const heading = Array.from(host.querySelectorAll("h2,h3,h4")).find(el=>/games/i.test(el.textContent));
+      if(heading && heading.parentElement) heading.parentElement.appendChild(restButton);
+      else host.insertBefore(restButton,host.firstChild);
+    } else if(restButton && (unlocked || todaysTasks.length>0 || eligibility.date!==today)){
+      restButton.remove();
+    }
     return unlocked;
   }
 
@@ -3192,7 +3237,7 @@ function saveTasks(){
     if(timer){clearInterval(timer);timer=null}
     if(focusTask){
       const wasIncomplete = !focusTask.done;
-      focusTask.done=true;
+      focusTask.done=true; recordBreakTaskCompletion(focusTask);
       if(wasIncomplete) playCompletionSound();
       saveTasks();
       renderTasks();
@@ -3235,7 +3280,7 @@ function saveTasks(){
     if(window.steadyWeekTrack) window.steadyWeekTrack("timer_completed",{completion_type:"focus_flow"});
     if(focusTask){
       const wasIncomplete = !focusTask.done;
-      focusTask.done=true;
+      focusTask.done=true; recordBreakTaskCompletion(focusTask);
       if(wasIncomplete) playCompletionSound();
       saveTasks();
       renderTasks();
