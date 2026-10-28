@@ -2486,8 +2486,10 @@ function saveTasks(){
       // The sync function sees the current occurrence and won't duplicate it.
       // Calendar rendering materializes the remaining dates in the visible month.
     } else {
-      // A one-occurrence edit detaches this task from the series and records an
-      // exception date so the routine does not recreate the original occurrence.
+      // If a one-off task is changed to repeat, create a real routine series.
+      // The repeat label alone is not enough: Calendar renders actual dated
+      // task occurrences, so future dates must be materialized from a routine.
+      const selectedRepeat = routine ? "Does not repeat" : $("modifyRepeat").value;
       if(routine){
         routine.skipDates=Array.isArray(routine.skipDates) ? routine.skipDates : [];
         if(!routine.skipDates.includes(originalRoutineDate)) routine.skipDates.push(originalRoutineDate);
@@ -2498,7 +2500,26 @@ function saveTasks(){
       task.taskDate=newDate;
       task.when=when;
       task.duration=duration;
-      task.repeat = routine ? "Does not repeat" : $("modifyRepeat").value;
+      task.repeat=selectedRepeat;
+
+      if(!routine && ["Daily","Weekly","Biweekly","Monthly"].includes(selectedRepeat)){
+        const newRoutineId = Date.now() + Math.floor(Math.random()*100000);
+        const newRoutine = {
+          id:newRoutineId, name, freq:selectedRepeat, duration, when,
+          startDate:newDate, skipDates:[], ended:false
+        };
+        routines.push(newRoutine);
+        task.routineId=newRoutineId;
+        task.routineDate=newDate;
+        task.repeat=selectedRepeat;
+        saveRoutines();
+        // Generate occurrences for every date in the currently visible month.
+        const monthStart = new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
+        const monthEnd = new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,0);
+        for(let cursor=new Date(monthStart); cursor<=monthEnd; cursor.setDate(cursor.getDate()+1)){
+          syncRoutineTasksForDate(isoDate(cursor));
+        }
+      }
     }
 
     delete task.steps;
