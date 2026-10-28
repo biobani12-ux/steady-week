@@ -2191,6 +2191,36 @@ function saveTasks(){
     if(changed) saveTasks();
     return changed;
   }
+  function attachTaskRecurrence(task, frequency){
+    if(!task || !["Daily","Weekly","Biweekly","Monthly"].includes(frequency)) return;
+    // Avoid creating duplicate series if the task already belongs to one.
+    if(task.routineId && routines.some(r=>String(r.id)===String(task.routineId))) return;
+    const routine = {
+      id: Date.now() + Math.floor(Math.random()*100000),
+      name: task.name,
+      icon: "↻",
+      freq: frequency,
+      duration: Number(task.duration)||15,
+      when: task.when||"",
+      startDate: task.taskDate || todayISO(),
+      skipDates: [],
+      ended: false
+    };
+    routines.push(routine);
+    task.routineId = routine.id;
+    task.routineDate = task.taskDate || todayISO();
+    task.repeat = frequency;
+    saveRoutines();
+    // Generate all due occurrences for the month currently shown in Calendar.
+    const monthStart = new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
+    const monthEnd = new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,0);
+    for(let d=new Date(monthStart); d<=monthEnd; d.setDate(d.getDate()+1)){
+      const dateISO=isoDate(d);
+      if(dateISO < routine.startDate || !routineIsDueOn(routine,dateISO)) continue;
+      syncRoutineTasksForDate(dateISO);
+    }
+  }
+
   saveRoutines();
   let events = [];
   const PROGRESS_KEY = "steadyWeekProgress_v1";
@@ -2766,6 +2796,21 @@ function saveTasks(){
     let duration = 15;
     let when = "";
     let taskDate = todayISO();
+    let repeat = "Does not repeat";
+    const recurrencePatterns = [
+      {freq:"Biweekly", re:/\b(?:biweekly|bi-weekly|every\s+two\s+weeks|every\s+other\s+week|fortnightly)\b/i},
+      {freq:"Daily", re:/\b(?:daily|every\s+day|each\s+day)\b/i},
+      {freq:"Weekly", re:/\b(?:weekly|every\s+week|each\s+week)\b/i},
+      {freq:"Monthly", re:/\b(?:monthly|every\s+month|each\s+month)\b/i}
+    ];
+    for(const item of recurrencePatterns){
+      const match = clean.match(item.re);
+      if(match){
+        repeat = item.freq;
+        clean = clean.replace(match[0], " ");
+        break;
+      }
+    }
 
     // Relative dates.
     const relativeDatePatterns = [
@@ -2887,7 +2932,7 @@ function saveTasks(){
       .replace(/\s+([,.!?])$/,"$1")
       .replace(/^(please\s+)/i,"");
 
-    return {name:clean || original, duration, when, taskDate};
+    return {name:clean || original, duration, when, taskDate, repeat};
   }
 
   function todayISO(){
@@ -2947,13 +2992,14 @@ function saveTasks(){
         when: parsed.when || "",
         duration: allowed.includes(parsed.duration) ? parsed.duration : 15,
         done:false,
-        repeat:$("taskRepeat")?.value || "None",
+        repeat:parsed.repeat !== "Does not repeat" ? parsed.repeat : ($("taskRepeat")?.value || "Does not repeat"),
         taskDate:parsed.taskDate || todayISO()
       });
     });
 
     if(!created.length) return 0;
     tasks.push(...created);
+    created.forEach(task=>attachTaskRecurrence(task,task.repeat));
     saveTasks();
     renderTasks();
     updateBreakGameAvailability();
@@ -2991,6 +3037,7 @@ function saveTasks(){
       $("taskWhen").value = "";
     }
     $("taskDate").value = parsed.taskDate || todayISO();
+    if($("taskRepeat")) $("taskRepeat").value = parsed.repeat || "Does not repeat";
     openSheet();
   }
 
@@ -3243,6 +3290,7 @@ function saveTasks(){
     const duration=Number($("taskDuration").value);
     const t={id:Date.now(),name,when:$("taskWhen").value,duration,done:false,repeat:$("taskRepeat").value,taskDate:$("taskDate").value || todayISO()};
     tasks.push(t);
+    attachTaskRecurrence(t,t.repeat);
     saveTasks();
     closeSheet();
     renderTasks();
