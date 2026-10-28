@@ -1322,6 +1322,34 @@ body[data-theme="dark"] #nameSheet #changeNameInput::placeholder { color:#a7abb4
 body[data-theme="dark"] #nameSheet #changeNameInput:focus { outline:2px solid #1683f8; outline-offset:1px; }
 body[data-theme="dark"] #nameSheet #saveChangedName { background:#f3f3f3 !important; color:#111214 !important; border-color:#f3f3f3 !important; }
 body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #nameSheet #closeNameSheet { background:#292b30 !important; color:#f3f3f3 !important; border-color:#555861 !important; }
+
+  .brain-dump-form,.water-summary,.water-history{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:18px}
+  .brain-dump-form label{display:block;margin-bottom:8px;font-weight:700}
+  .brain-dump-form textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:90px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--input,var(--card));color:var(--ink);font:inherit}
+  .brain-dump-form button{width:100%;margin-top:10px}
+  .brain-dump-heading{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px}
+  .brain-dump-heading h2,.water-history h2{margin:0;font-size:20px}
+  #brainDumpCount{color:var(--muted);font-size:13px}
+  .brain-dump-item{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:10px;overflow-wrap:anywhere}
+  .brain-dump-item p{margin:0 0 10px;white-space:pre-wrap}
+  .brain-dump-meta{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;gap:10px}
+  .brain-dump-delete{border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:transparent;color:var(--ink)}
+  .water-summary{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .water-total{font-size:36px;font-weight:800;line-height:1.2;margin:8px 0}
+  .water-total small{font-size:17px;color:var(--muted)}
+  .water-goal{background:var(--bg);border-radius:13px;padding:12px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+  .water-goal b{font-size:15px;color:var(--ink)}
+  .water-help{color:var(--muted);font-size:14px;line-height:1.5}
+  .water-bottle-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:20px 0}
+  .water-bottle{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:15px;padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:105px}
+  .water-bottle svg{width:34px;height:52px;display:block}
+  .water-bottle.filled{background:color-mix(in srgb,#2496ed 13%,var(--card));border-color:#2496ed;color:var(--ink)}
+  .water-bottle .bottle-amount{font-size:11px;font-weight:700}
+  .water-actions{margin:12px 0 24px}.water-actions button{width:100%}
+  .water-history-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .water-history-row:last-child{border-bottom:0}
+  nav button{flex:1;min-width:0;font-size:9px;padding:5px 0}nav .nav-icon{font-size:17px}
+  @media(max-width:390px){nav button{font-size:8px}nav .nav-icon{font-size:15px}.water-bottle-grid{gap:7px}.water-bottle{padding:9px 2px}}
 </style>
 
 </head>
@@ -1480,11 +1508,38 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
 
   <div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><div class="welcome-kicker">LET'S MAKE TODAY EASIER</div><h2 id="nameDialogTitle">What should I call you?</h2><p id="nameDialogHelp">Your name is saved on this device so you won't have to enter it again.</p><input id="userNameInput" autocomplete="given-name" placeholder="Your first name" aria-label="Your name"><button class="primary" id="saveUserName" type="button">Continue</button><button id="cancelNameEdit" type="button" style="display:none;width:100%;margin-top:10px">Cancel</button></div></div>
 
+<section id="brainDump" class="screen">
+  <header><div><h1>Brain dump</h1><div class="date">Catch the idea. Decide what it means later.</div></div></header>
+  <div class="content">
+    <form id="brainDumpForm" class="brain-dump-form">
+      <label for="brainDumpInput">New idea</label>
+      <textarea id="brainDumpInput" rows="3" maxlength="2000" placeholder="An idea, something to try, something to remember…"></textarea>
+      <button class="primary-btn" type="submit">Save idea</button>
+    </form>
+    <div class="brain-dump-heading"><h2>Your ideas</h2><span id="brainDumpCount">0 ideas</span></div>
+    <div id="brainDumpList" class="brain-dump-list"></div>
+  </div>
+</section>
+<section id="water" class="screen">
+  <header><div><h1>Water tracker</h1><div class="date" id="waterDateLabel">Today's hydration</div></div></header>
+  <div class="content">
+    <div class="water-summary">
+      <div><div class="eyebrow">TODAY'S WATER</div><div class="water-total"><span id="waterMl">0</span> <small>ml</small></div><div class="date" id="waterBottleCount">0 of 10 bottles</div></div>
+      <div class="water-goal">Goal<br><b>3,000 ml</b></div>
+    </div>
+    <p class="water-help">Tap a bottle each time you finish 300 ml. Tap a filled bottle again to undo it.</p>
+    <div id="waterBottleGrid" class="water-bottle-grid" aria-label="Ten daily water bottles"></div>
+    <div class="water-actions"><button class="secondary-btn" id="waterReset">Reset today's bottles</button></div>
+    <div class="water-history"><h2>Daily history</h2><div id="waterHistoryList"></div></div>
+  </div>
+</section>
 <nav>
     <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Today</button>
     <button data-screen="progress"><span class="nav-icon">▥</span>Progress</button>
     <button data-screen="routines"><span class="nav-icon">↻</span>Routines</button>
     <button data-screen="calendar"><span class="nav-icon">□</span>Calendar</button>
+    <button data-screen="brainDump"><span class="nav-icon">💡</span>Brain dump</button>
+    <button data-screen="water"><span class="nav-icon">♧</span>Water</button>
     <button data-screen="break"><span class="nav-icon">☕</span>Break</button>
   </nav>
 </div>
@@ -2322,6 +2377,8 @@ function saveTasks(){
     if(id==="progress") renderProgress();
     if(id==="routines") renderRoutines("Daily");
     if(id==="calendar") renderCalendar();
+    if(id==="brainDump") renderBrainDump();
+    if(id==="water") renderWater();
     if(id==="break"){
       updateBreakGameAvailability();
       let hasPausedTimer=!!focusTask && remaining>0 && !focusTask.done;
@@ -2751,6 +2808,7 @@ function saveTasks(){
       if(legacy){ saved=legacy; localStorage.setItem(NAME_KEY,legacy); }
     }
     const overlay=$("welcomeOverlay"),input=$("userNameInput"),saveBtn=$("saveUserName"),title=$("nameDialogTitle"),help=$("nameDialogHelp"),cancelBtn=$("cancelNameEdit");let editingName=false;function openNameEditor(edit){editingName=!!edit;title.textContent=editingName?"Change your name":"What should I call you?";help.textContent=editingName?"Correct a typo or choose a different name. This only updates your saved greeting on this device.":"Your name is saved on this device so you won't have to enter it again.";saveBtn.textContent=editingName?"Save name":"Continue";cancelBtn.style.display=editingName?"block":"none";input.value=localStorage.getItem(NAME_KEY)||localStorage.getItem("adhdAppUserName")||"";overlay.style.display="flex";setTimeout(()=>{input.focus();input.select()},100)}if(saved){$("greeting").textContent=`${getGreeting()}, ${saved}`;overlay.style.display="none";}else{openNameEditor(false)}$("editNameBtn").addEventListener("click",()=>openNameEditor(true));cancelBtn.addEventListener("click",()=>{overlay.style.display="none";editingName=false});saveBtn.onclick=()=>{const name=input.value.trim();if(!name)return;localStorage.setItem(NAME_KEY,name);localStorage.setItem("adhdAppUserName",name);$("greeting").textContent=`${getGreeting()}, ${name}`;overlay.style.display="none";editingName=false};input.addEventListener("keydown",e=>{if(e.key==="Enter")saveBtn.click();if(e.key==="Escape"&&editingName)cancelBtn.click()})}
+  initBrainDumpAndWater();
   setupIdentity();
   saveTasks();
   renderTasks();
@@ -4555,7 +4613,37 @@ document.addEventListener("click",function(e){
     if (toggle) toggle.checked = theme === "dark";
     try { localStorage.setItem(KEY, theme); } catch (_) {}
   }
-  function init(){
+  
+const BRAIN_DUMP_KEY = "steadyWeekBrainDump_v1";
+const WATER_TRACKER_KEY = "steadyWeekWaterTracker_v1";
+function loadBrainDump(){try{return JSON.parse(localStorage.getItem(BRAIN_DUMP_KEY)||"[]")}catch(e){return []}}
+function saveBrainDump(items){localStorage.setItem(BRAIN_DUMP_KEY,JSON.stringify(items))}
+function renderBrainDump(){
+  const items=loadBrainDump(),list=$("brainDumpList"),count=$("brainDumpCount");if(!list)return;
+  count.textContent=`${items.length} ${items.length===1?"idea":"ideas"}`;list.innerHTML="";
+  if(!items.length){list.innerHTML='<div class="event" style="color:var(--muted)">No ideas yet. Capture the first one before your brain opens 14 more tabs.</div>';return}
+  items.forEach(item=>{const card=document.createElement("article");card.className="brain-dump-item";const p=document.createElement("p");p.textContent=item.text;card.appendChild(p);const meta=document.createElement("div");meta.className="brain-dump-meta";const date=document.createElement("span");date.textContent=new Date(item.createdAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});const del=document.createElement("button");del.type="button";del.className="brain-dump-delete";del.textContent="Delete";del.addEventListener("click",()=>{saveBrainDump(loadBrainDump().filter(x=>x.id!==item.id));renderBrainDump()});meta.append(date,del);card.appendChild(meta);list.appendChild(card)})
+}
+function waterToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function loadWaterData(){try{return JSON.parse(localStorage.getItem(WATER_TRACKER_KEY)||"{}")}catch(e){return {}}}
+function saveWaterData(data){localStorage.setItem(WATER_TRACKER_KEY,JSON.stringify(data))}
+function bottleIcon(filled){return `<svg viewBox="0 0 36 56" aria-hidden="true"><path d="M13 3h10v7l4 5v34a4 4 0 0 1-4 4H13a4 4 0 0 1-4-4V15l4-5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M10 31h16v18a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2z" fill="${filled?"#2496ed":"none"}" opacity=".9"/><path d="M13 3h10M13 10h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`}
+function renderWater(){
+ const date=waterToday(),data=loadWaterData(),count=Math.max(0,Math.min(10,Number(data[date]||0)));
+ $("waterDateLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+ $("waterMl").textContent=(count*300).toLocaleString();$("waterBottleCount").textContent=`${count} of 10 bottles`;
+ const grid=$("waterBottleGrid");grid.innerHTML="";
+ for(let i=1;i<=10;i++){const filled=i<=count,b=document.createElement("button");b.type="button";b.className="water-bottle"+(filled?" filled":"");b.setAttribute("aria-pressed",String(filled));b.setAttribute("aria-label",`${filled?"Unmark":"Mark"} bottle ${i}, 300 milliliters`);b.innerHTML=bottleIcon(filled)+`<span>${i}</span><span class="bottle-amount">300 ml</span>`;b.addEventListener("click",()=>{const d=loadWaterData(),n=Math.max(0,Math.min(10,Number(d[date]||0)));d[date]=i<=n?i-1:i;saveWaterData(d);renderWater()});grid.appendChild(b)}
+ const history=$("waterHistoryList");history.innerHTML="";const dates=Object.keys(data).filter(d=>Number(data[d])>0).sort((a,b)=>b.localeCompare(a)).slice(0,14);
+ if(!dates.length){history.innerHTML='<div class="date">Your logged days will appear here.</div>';return}
+ dates.forEach(d=>{const row=document.createElement("div");row.className="water-history-row";const left=document.createElement("span");left.textContent=d===date?"Today":new Date(d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});const right=document.createElement("b");right.textContent=`${Number(data[d])} bottles · ${Number(data[d])*300} ml`;row.append(left,right);history.appendChild(row)})
+}
+function initBrainDumpAndWater(){
+ $("brainDumpForm")?.addEventListener("submit",e=>{e.preventDefault();const input=$("brainDumpInput"),text=input.value.trim();if(!text)return;const items=loadBrainDump();items.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text,createdAt:new Date().toISOString()});saveBrainDump(items);input.value="";renderBrainDump()});
+ $("waterReset")?.addEventListener("click",()=>{if(!confirm("Reset today's bottle count to zero?"))return;const data=loadWaterData();delete data[waterToday()];saveWaterData(data);renderWater()});
+ renderBrainDump();renderWater()
+}
+function init(){
     let saved = "light";
     try { saved = localStorage.getItem(KEY) || "light"; } catch (_) {}
     setTheme(saved);
