@@ -2513,12 +2513,34 @@ function saveTasks(){
         task.routineDate=newDate;
         task.repeat=selectedRepeat;
         saveRoutines();
-        // Generate occurrences for every date in the currently visible month.
+        // Materialize future occurrences directly as well as through shared
+        // routine sync, because Calendar dots and day lists read dated task records.
         const monthStart = new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
         const monthEnd = new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,0);
-        for(let cursor=new Date(monthStart); cursor<=monthEnd; cursor.setDate(cursor.getDate()+1)){
-          syncRoutineTasksForDate(isoDate(cursor));
+        const firstDate = new Date(newDate + "T12:00:00");
+        const cursor = new Date(Math.max(monthStart.getTime(), new Date(firstDate.getFullYear(),firstDate.getMonth(),firstDate.getDate()).getTime()));
+        for(; cursor<=monthEnd; cursor.setDate(cursor.getDate()+1)){
+          const dateISO = isoDate(cursor);
+          if(!routineIsDueOn(newRoutine, dateISO)) continue;
+          const exists = tasks.some(item =>
+            String(item.routineId || "") === String(newRoutineId) &&
+            item.routineDate === dateISO
+          );
+          if(exists) continue;
+          if(dateISO === newDate){
+            task.routineId = newRoutineId;
+            task.routineDate = dateISO;
+            task.repeat = selectedRepeat;
+            continue;
+          }
+          tasks.push({
+            id: Date.now() + Math.floor(Math.random()*100000),
+            name, when, duration, done:false, repeat:selectedRepeat,
+            taskDate:dateISO, routineId:newRoutineId, routineDate:dateISO
+          });
         }
+        saveRoutines();
+        saveTasks();
       }
     }
 
