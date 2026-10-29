@@ -632,6 +632,11 @@ body[data-theme="dark"] .welcome-card #cancelNameEdit{background:transparent;col
   .calendar-task-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   .calendar-task-action{font-size:13px;padding:8px 12px;min-height:36px;border-radius:10px}
   body[data-theme="dark"] #events .calendar-task-action{border:1px solid #45474d}
+
+  .privacy-copy{font-size:14px;line-height:1.55;color:var(--ink);padding:0 2px 12px}
+  .privacy-copy h3{font-size:16px;margin:18px 0 6px}
+  .privacy-copy p{margin:8px 0}
+  #privacyNoticeSheet .panel,#analyticsConsentSheet .panel{box-sizing:border-box}
 </style>
 
 <style>
@@ -1302,16 +1307,40 @@ body[data-theme="light"] #events .event .meta{
 
 
   <!-- Google Analytics 4: Steady Week -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QTKXJQZ57B"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-QTKXJQZ57B', { send_page_view: true });
-    // Privacy-conscious product analytics: never send task names, notes, or voice transcripts.
+    // Analytics is off until the user explicitly opts in. This setting is local to this browser.
+    window.STEADY_WEEK_ANALYTICS_KEY = 'steadyWeekAnalyticsConsent_v1';
+    window.steadyWeekAnalyticsAllowed = function() {
+      try { return localStorage.getItem(window.STEADY_WEEK_ANALYTICS_KEY) === 'accepted'; }
+      catch (_) { return false; }
+    };
     window.steadyWeekTrack = function(eventName, params) {
+      if (!window.steadyWeekAnalyticsAllowed()) return;
       if (typeof window.gtag === 'function') window.gtag('event', eventName, params || {});
     };
+    window.steadyWeekEnableAnalytics = function() {
+      try { localStorage.setItem(window.STEADY_WEEK_ANALYTICS_KEY, 'accepted'); } catch (_) {}
+      if (!window.__steadyWeekAnalyticsConfigured) {
+        // Do not even request the Google Analytics script until the user opts in.
+        if (!document.getElementById('steadyWeekGoogleAnalyticsScript')) {
+          var analyticsScript = document.createElement('script');
+          analyticsScript.id = 'steadyWeekGoogleAnalyticsScript';
+          analyticsScript.async = true;
+          analyticsScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-QTKXJQZ57B';
+          document.head.appendChild(analyticsScript);
+        }
+        gtag('config', 'G-QTKXJQZ57B', { send_page_view: true });
+        window.__steadyWeekAnalyticsConfigured = true;
+      }
+    };
+    window.steadyWeekDisableAnalytics = function() {
+      try { localStorage.setItem(window.STEADY_WEEK_ANALYTICS_KEY, 'essential'); } catch (_) {}
+      // Prevent future app-generated analytics events in this browser session.
+    };
+    if (window.steadyWeekAnalyticsAllowed()) window.steadyWeekEnableAnalytics();
   </script>
 
 <style id="name-sheet-dark-theme-fix">
@@ -1694,8 +1723,51 @@ body[data-theme="dark"] #nameSheet #cancelChangedName, body[data-theme="dark"] #
       <button class="secondary" id="openBackup">Manage</button>
     </div>
     <div class="settings-row">
-      <div class="settings-label"><b>Local data</b><span>Your data remains on this device even without Google backup.</span></div>
+      <div class="settings-label"><b>Privacy & analytics</b><span>Review what is stored locally, what Google Analytics receives, and how optional Google Drive backup works.</span></div>
+      <button class="secondary" id="openPrivacyNotice">View</button>
     </div>
+    <div class="settings-row">
+      <div class="settings-label"><b>Usage analytics</b><span id="analyticsPreferenceText">Analytics preference not set. Analytics stays off unless you allow it.</span></div>
+      <button class="secondary" id="manageAnalyticsConsent">Manage</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label"><b>Local data</b><span>Your data is stored in this browser unless you choose to back it up to Google Drive. Browser storage is not an encrypted vault.</span></div>
+    </div>
+  </div>
+</div>
+
+
+<div class="sheet" id="privacyNoticeSheet" aria-hidden="true">
+  <div class="panel" style="max-height:92dvh;overflow:auto">
+    <div class="sheet-head"><h2>Privacy notice</h2><button class="close-sheet" id="closePrivacyNotice" aria-label="Close privacy notice">×</button></div>
+    <div class="privacy-copy">
+      <p><b>Last updated: October 29, 2026</b></p>
+      <p>Steady Week is a productivity app. This notice explains what the app stores, what is shared with third parties, and the choices available to you.</p>
+      <h3>1. Data stored on your device</h3>
+      <p>Tasks, routines, task completion and progress, your display name, Brain dump ideas, water-tracking entries, preferences, and related app state are stored in your browser's local storage or other browser storage used by the app. This data is not automatically sent to a Steady Week server by these features. Anyone who can access your unlocked device or browser profile may be able to access local data. Browser storage is not encrypted by this app. Clearing site data, using a different browser, or opening a downloaded HTML file instead of the hosted website can make saved data unavailable.</p>
+      <h3>2. Optional Google Analytics</h3>
+      <p>Usage analytics is optional and starts only if you choose “Allow analytics.” If enabled, Steady Week sends product-usage events to Google Analytics 4 (measurement ID G-QTKXJQZ57B), such as tab views, time spent on tabs, task-completion events, timer activity, and app errors. The app's event code is designed not to include task titles, Brain dump text, voice transcripts, or your display name. Google may still receive standard technical information such as browser/device details, online identifiers, and network-derived approximate location, according to Google's own services and settings.</p>
+      <p>If you choose “Essential only,” app-generated analytics events and Google Analytics configuration are not enabled. You can change this choice in Settings → Privacy & analytics. This choice is saved in this browser only.</p>
+      <h3>3. Optional Google Drive backup</h3>
+      <p>If you connect Google Drive and use backup or restore, app data included by the backup feature is transferred to Google's Drive service in the app's private app-data area. Google processes that data under its own terms and privacy practices. Do not back up highly sensitive information unless you are comfortable storing it in your Google account. You can choose not to connect Drive.</p>
+      <h3>4. Sharing and sale</h3>
+      <p>Steady Week does not have its own app backend in this version and does not sell your task or Brain dump content. Google receives data when you enable analytics or use Google Drive backup, as described above. Hosting and third-party services may process technical requests needed to deliver the app.</p>
+      <h3>5. Your choices and data control</h3>
+      <p>You can decline analytics, avoid Google Drive backup, and remove local data using the browser's site-data controls. Be careful: clearing site data can permanently delete tasks and other information that has not been backed up. Analytics preference changes apply to this browser; they do not erase information Google may have already received.</p>
+      <h3>6. Contact</h3>
+      <p>This version does not list a dedicated privacy contact. Before public release, the app owner should add a monitored contact address and confirm this notice matches the final deployed code and applicable legal requirements.</p>
+    </div>
+    <button class="primary" id="privacyDone">Close</button>
+  </div>
+</div>
+
+<div class="sheet" id="analyticsConsentSheet" aria-hidden="true">
+  <div class="panel">
+    <div class="sheet-head"><h2>Your privacy choice</h2><button class="close-sheet" id="closeAnalyticsConsent" aria-label="Close analytics choice">×</button></div>
+    <p class="date">Help improve Steady Week by sharing limited usage analytics with Google Analytics. Analytics is off unless you allow it. Task names, notes, Brain dump text, voice transcripts, and your display name are not intended to be included in app-generated analytics events.</p>
+    <button class="primary" id="acceptAnalytics">Allow analytics</button>
+    <button class="secondary" id="rejectAnalytics" style="width:100%;margin-top:10px">Essential only</button>
+    <button class="secondary" id="readPrivacyFromConsent" style="width:100%;margin-top:10px">Read privacy notice</button>
   </div>
 </div>
 
@@ -5043,6 +5115,56 @@ function init(){
   // Useful low-risk diagnostics without collecting personal content.
   window.addEventListener('error', function () {
     track('app_error', {error_type:'javascript'});
+  });
+})();
+</script>
+
+
+<script id="privacy-controls">
+(function(){
+  function el(id){return document.getElementById(id);}
+  function openSheet(id){var n=el(id);if(n){n.classList.add('show');n.setAttribute('aria-hidden','false');}}
+  function closeSheet(id){var n=el(id);if(n){n.classList.remove('show');n.setAttribute('aria-hidden','true');}}
+  function refreshPreference(){
+    var text=el('analyticsPreferenceText');
+    if(!text)return;
+    var allowed=window.steadyWeekAnalyticsAllowed && window.steadyWeekAnalyticsAllowed();
+    var key=window.STEADY_WEEK_ANALYTICS_KEY;
+    var choice='unset';
+    try{choice=localStorage.getItem(key)||'unset';}catch(_){}
+    text.textContent=choice==='accepted'?'Analytics allowed. You can switch to essential-only events.':(choice==='essential'?'Essential only. Analytics is off.':'No choice saved. Analytics is off until you allow it.');
+  }
+  function chooseAnalytics(allow){
+    if(allow){window.steadyWeekEnableAnalytics && window.steadyWeekEnableAnalytics();}
+    else{window.steadyWeekDisableAnalytics && window.steadyWeekDisableAnalytics();}
+    closeSheet('analyticsConsentSheet');
+    refreshPreference();
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    el('openPrivacyNotice')?.addEventListener('click',function(){closeSheet('settingsSheet');openSheet('privacyNoticeSheet');});
+    el('closePrivacyNotice')?.addEventListener('click',function(){closeSheet('privacyNoticeSheet');});
+    el('privacyDone')?.addEventListener('click',function(){closeSheet('privacyNoticeSheet');});
+    el('manageAnalyticsConsent')?.addEventListener('click',function(){closeSheet('settingsSheet');openSheet('analyticsConsentSheet');});
+    el('closeAnalyticsConsent')?.addEventListener('click',function(){closeSheet('analyticsConsentSheet');refreshPreference();});
+    el('acceptAnalytics')?.addEventListener('click',function(){chooseAnalytics(true);});
+    el('rejectAnalytics')?.addEventListener('click',function(){chooseAnalytics(false);});
+    el('readPrivacyFromConsent')?.addEventListener('click',function(){closeSheet('analyticsConsentSheet');openSheet('privacyNoticeSheet');});
+    refreshPreference();
+    var choice='unset';
+    try{choice=localStorage.getItem(window.STEADY_WEEK_ANALYTICS_KEY)||'unset';}catch(_){}
+    if(choice==='unset'){
+      // Show the choice after name onboarding closes, rather than letting the
+      // onboarding sheet hide it permanently on first visit.
+      var attempts=0;
+      function showChoiceWhenReady(){
+        var nameSheet=el('nameSheet');
+        var visibleNameSheet=nameSheet && getComputedStyle(nameSheet).display!=='none';
+        var otherSheet=document.querySelector('.sheet.show:not(#settingsSheet):not(#privacyNoticeSheet):not(#analyticsConsentSheet)');
+        if(!visibleNameSheet && !otherSheet){openSheet('analyticsConsentSheet');return;}
+        if(attempts++<40)window.setTimeout(showChoiceWhenReady,500);
+      }
+      window.setTimeout(showChoiceWhenReady,500);
+    }
   });
 })();
 </script>
