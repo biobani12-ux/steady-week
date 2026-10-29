@@ -2807,33 +2807,26 @@ function saveTasks(){
       saved=localStorage.getItem(NAME_KEY)||"";
       if(!saved){
         const legacy=localStorage.getItem("adhdAppUserName");
-        if(legacy){ saved=legacy; try{localStorage.setItem(NAME_KEY,legacy);}catch(_){} }
+        if(legacy){saved=legacy;try{localStorage.setItem(NAME_KEY,legacy)}catch(_){}}
       }
-    }catch(storageError){ console.warn("Name storage unavailable; showing the name prompt.",storageError); }
-    const overlay=$("welcomeOverlay"),input=$("userNameInput"),saveBtn=$("saveUserName"),title=$("nameDialogTitle"),help=$("nameDialogHelp"),cancelBtn=$("cancelNameEdit");let editingName=false;function openNameEditor(edit){editingName=!!edit;title.textContent=editingName?"Change your name":"What should I call you?";help.textContent=editingName?"Correct a typo or choose a different name. This only updates your saved greeting on this device.":"Your name is saved on this device so you won't have to enter it again.";saveBtn.textContent=editingName?"Save name":"Continue";cancelBtn.style.display=editingName?"block":"none";try{input.value=localStorage.getItem(NAME_KEY)||localStorage.getItem("adhdAppUserName")||input.value||"";}catch(_){input.value=input.value||"";}overlay.style.display="flex";overlay.setAttribute("aria-hidden","false");setTimeout(()=>{input.focus();input.select()},100)}if(saved){$("greeting").textContent=`${getGreeting()}, ${saved}`;overlay.style.display="none";overlay.setAttribute("aria-hidden","true");}else{openNameEditor(false)}$("editNameBtn").addEventListener("click",()=>openNameEditor(true));cancelBtn.addEventListener("click",()=>{overlay.style.display="none";editingName=false});saveBtn.onclick=()=>{
+    }catch(error){console.warn("Name storage unavailable.",error)}
+    const overlay=$("welcomeOverlay"),input=$("userNameInput"),saveBtn=$("saveUserName"),title=$("nameDialogTitle"),help=$("nameDialogHelp"),cancelBtn=$("cancelNameEdit");let editingName=false;function openNameEditor(edit){editingName=!!edit;title.textContent=editingName?"Change your name":"What should I call you?";help.textContent=editingName?"Correct a typo or choose a different name. This only updates your saved greeting on this device.":"Your name is saved on this device so you won't have to enter it again.";saveBtn.textContent=editingName?"Save name":"Continue";cancelBtn.style.display=editingName?"block":"none";try{input.value=localStorage.getItem(NAME_KEY)||localStorage.getItem("adhdAppUserName")||input.value||""}catch(_){}overlay.style.display="flex";overlay.setAttribute("aria-hidden","false");setTimeout(()=>{input.focus();input.select()},100)}if(saved){$("greeting").textContent=`${getGreeting()}, ${saved}`;overlay.style.display="none";overlay.setAttribute("aria-hidden","true");}else{openNameEditor(false)}$("editNameBtn").addEventListener("click",()=>openNameEditor(true));cancelBtn.addEventListener("click",()=>{overlay.style.display="none";editingName=false});const saveNameAndContinue=()=>{
       const name=input.value.trim();
       if(!name){input.focus();return;}
-      // Storage may be unavailable in a downloaded file or restricted browser context.
-      // Never let a storage exception prevent the Continue action.
-      let persisted=false;
       try{
         localStorage.setItem(NAME_KEY,name);
         localStorage.setItem("adhdAppUserName",name);
-        persisted=true;
-      }catch(storageError){
-        console.warn("Could not persist the display name; continuing for this session.",storageError);
+      }catch(error){
+        console.warn("Name could not be persisted in this browser context.",error);
       }
       $("greeting").textContent=`${getGreeting()}, ${name}`;
       overlay.style.display="none";
       overlay.setAttribute("aria-hidden","true");
       editingName=false;
-      if(!persisted){
-        const toast=$("toast");
-        if(toast){toast.textContent="Continued for this session, but the browser could not save your name. Existing data was not cleared.";toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),4500);}
-      }
-    };input.addEventListener("keydown",e=>{if(e.key==="Enter")saveBtn.click();if(e.key==="Escape"&&editingName)cancelBtn.click()})}
-  initBrainDumpAndWater();
+    };
+    saveBtn.addEventListener("click",saveNameAndContinue);input.addEventListener("keydown",e=>{if(e.key==="Enter")saveBtn.click();if(e.key==="Escape"&&editingName)cancelBtn.click()})}
   setupIdentity();
+  try { initBrainDumpAndWater(); } catch (error) { console.error('Brain dump/water initialization failed:', error); }
   saveTasks();
   renderTasks();
 
