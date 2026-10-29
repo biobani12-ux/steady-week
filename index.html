@@ -4630,6 +4630,9 @@ document.addEventListener("click",function(e){
     try { localStorage.setItem(KEY, theme); } catch (_) {}
   }
   
+// This feature code lives in a separate IIFE from the main app. Give it its
+// own DOM lookup helper; the main app's `$` is intentionally not global.
+const $ = id => document.getElementById(id);
 const BRAIN_DUMP_KEY = "steadyWeekBrainDump_v1";
 const WATER_TRACKER_KEY = "steadyWeekWaterTracker_v1";
 function loadBrainDump(){try{return JSON.parse(localStorage.getItem(BRAIN_DUMP_KEY)||"[]")}catch(e){return []}}
