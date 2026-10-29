@@ -2826,7 +2826,6 @@ function saveTasks(){
     };
     saveBtn.addEventListener("click",saveNameAndContinue);input.addEventListener("keydown",e=>{if(e.key==="Enter")saveBtn.click();if(e.key==="Escape"&&editingName)cancelBtn.click()})}
   setupIdentity();
-  try { initBrainDumpAndWater(); } catch (error) { console.error('Brain dump/water initialization failed:', error); }
   saveTasks();
   renderTasks();
 
@@ -4659,6 +4658,12 @@ function initBrainDumpAndWater(){
  $("brainDumpForm")?.addEventListener("submit",e=>{e.preventDefault();const input=$("brainDumpInput"),text=input.value.trim();if(!text)return;const items=loadBrainDump();items.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text,createdAt:new Date().toISOString()});saveBrainDump(items);input.value="";renderBrainDump()});
  $("waterReset")?.addEventListener("click",()=>{if(!confirm("Reset today's bottle count to zero?"))return;const data=loadWaterData();delete data[waterToday()];saveWaterData(data);renderWater()});
  renderBrainDump();renderWater()
+}
+// Run only after this script has defined the Brain dump and Water functions.
+try {
+  initBrainDumpAndWater();
+} catch (error) {
+  console.error("Brain dump/Water initialization failed:", error);
 }
 function init(){
     let saved = "light";
