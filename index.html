@@ -2389,12 +2389,14 @@ function saveTasks(){
   function todayTasksAreComplete(){
     const today = todayISO();
     const todayTasks = tasks.filter(t => (t.taskDate || today) === today);
-    // Empty days do not auto-unlock games. Eligibility is earned by completing
-    // at least one task today, or by explicitly confirming a planned rest day.
+
+    // Unlock when there is at least one task scheduled for today and every
+    // one is marked complete. Do not require a separate completion-history
+    // record: older versions could mark tasks done without recording eligibility.
+    // An empty day still does not unlock games automatically.
     const eligibility = getBreakEligibility();
     if(eligibility.date === today && eligibility.restDayConfirmed === true) return true;
-    return todayTasks.length > 0 && todayTasks.every(t => t.done === true) &&
-      eligibility.date === today && eligibility.completedTaskIds?.length > 0;
+    return todayTasks.length > 0 && todayTasks.every(t => t.done === true);
   }
   function recordBreakTaskCompletion(task){
     const today = todayISO();
